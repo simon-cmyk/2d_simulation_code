@@ -26,8 +26,11 @@ class Vehicle(Object):
         self.heading = heading  # psi
         self.verticesVCF = self.init_verticesVCF(length, width)
         self.position_center = center
+
         # initialize the originVCF as a CCT point, hence the minus!
         self.originVCF = self.CCFtoWCF(np.array([0.0, 0.0]))
+        # self.originVCF = self.CCFtoWCF(np.array([0.0, -length / 2]))
+
         self.vertices = self.vertices_VCTtoWCF(self.verticesVCF)
         super().__init__(center, self.vertices)
 
@@ -234,7 +237,10 @@ class Vehicle(Object):
 
         # Step 5: Update position_center, vertices and sides accordingly.
         self.originVCF[0], self.originVCF[1] = self.X[0], self.X[1]
+
+        # self.position_center = self.VCTtoWCF(np.array([0, self.length / 2]))
         self.position_center = self.VCTtoWCF(np.array([0, 0]))
+
         self.vertices = self.vertices_VCTtoWCF(self.verticesVCF)
         self.sides = [
             [self.vertices[0], self.vertices[1]],
@@ -325,7 +331,9 @@ class Vehicle(Object):
 
         # Step 5: Update position_center, vertices and sides accordingly.
         self.originVCF[0], self.originVCF[1] = self.X[0], self.X[1]
-        self.position_center = self.VCTtoWCF(np.array([0, 0]))
+
+        self.position_center = self.VCTtoWCF(np.array([0, self.length / 2]))
+        # self.position_center = self.VCTtoWCF(np.array([0, 0]))
 
         self.vertices = self.vertices_VCTtoWCF(self.verticesVCF)
         self.sides = [
@@ -438,7 +446,9 @@ class Vehicle(Object):
 
         # Step 5: Update position_center, vertices and sides accordingly.
         self.originVCF[0], self.originVCF[1] = self.X[0], self.X[1]
-        self.position_center = self.VCTtoWCF(np.array([0, 0]))
+
+        self.position_center = self.VCTtoWCF(np.array([0, self.length / 2]))
+        # self.position_center = self.VCTtoWCF(np.array([0, 0]))
 
         self.vertices = self.vertices_VCTtoWCF(self.verticesVCF)
         self.sides = [

@@ -1473,8 +1473,8 @@ def map_lanes_single(
     pixels_per_unit=10,
     viz=True,
     dt=0.1,
-    tau_steering=0.4,
-    tau_throttle=0.4,
+    tau_steering=0.9,
+    tau_throttle=0.9,
 ):
     # Spawn in the outer wall:
     vertices = np.array([[5, 5], [5, 105], [180, 105], [180, 5]])
@@ -1786,12 +1786,150 @@ def map_circle_multi(
         return objects, cars
 
 
+def make_boat_scenario(
+    scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True, dt=0.1
+):
+    # Spawn in the walls:
+    # vertices = PointsOnCircum(r=100, n=50, center=(75, 55))
+
+    # Define the outer rim (harbor boundary)
+    outer_rim = Object(
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[0, 0], [0, 100], [175, 100], [175, 0]]  # Outer boundary of the harbor
+        ),
+    )
+
+    # # Define piers
+    # pier1 = Object(
+    #     center=np.array([20, 10]),
+    #     vertices=np.array([[0, 10], [0, 30], [35, 30], [35, 10]]),  # Rectangular pier
+    # )
+
+    pier2 = Object(
+        center=np.array([80, 10]),
+        vertices=np.array(
+            [[70, 0], [70, 50], [80, 50], [80, 0]]
+        ),  # Slightly larger pier
+    )
+
+    pier3 = Object(
+        center=np.array([130, 10]),
+        vertices=np.array([[140, 0], [140, 35], [150, 35], [150, 0]]),  # Small pier
+    )
+
+    # # Define buildings
+    # building1 = Object(
+    #     center=np.array([10, 60]),
+    #     vertices=np.array(
+    #         [[10, 60], [10, 0], [40, 0], [40, 60]]
+    #     ),  # Rectangular building
+    # )
+
+    building2 = Object(
+        center=np.array([70, 70]),
+        vertices=np.array([[70, 70], [70, 90], [95, 90], [95, 70]]),  # Another building
+    )
+
+    building3 = Object(
+        center=np.array([130, 60]),
+        vertices=np.array(
+            [[130, 60], [130, 90], [170, 90], [170, 60]]
+        ),  # Larger building
+    )
+
+    # Volkswagen
+    car1 = Vehicle(
+        np.array([35, 20]),
+        length=8,
+        width=4,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car2 = Vehicle(
+        np.array([65, 20]),
+        length=8,
+        width=4,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car3 = Vehicle(
+        np.array([25, 55]),
+        length=8,
+        width=4,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car4 = Vehicle(
+        np.array([85, 55]),
+        length=8,
+        width=4,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    # Extra
+    car5 = Vehicle(
+        np.array([65, 35]),
+        length=8,
+        width=4,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car6 = Vehicle(
+        np.array([85, 35]),
+        length=8,
+        width=4,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        car5,
+        car6,
+        outer_rim,
+        # pier1,
+        pier2,
+        pier3,
+        # building1,
+        building2,
+        building3,
+    ]  # , wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    cars = [car1, car2, car3, car4, car5, car6]
+
+    if viz:
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
+        return gfx, objects, cars
+    else:
+        return objects, cars
+
+
 def driving_with_many_boats():
     # Create a visualizer
     divider = 10
     dt = 1 / divider
-    gfx, objects, cars = map_circle_multi(
-        scale=1, height=1200, width=2200, pixels_per_unit=10, dt=dt
+    gfx, objects, cars = make_boat_scenario(
+        scale=1, height=1080, width=1920, pixels_per_unit=10, dt=dt
     )
     # gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
     # gfx, objects, cars = map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
@@ -1884,6 +2022,6 @@ if __name__ == "__main__":
     # driving_with_multiple_random_drivers_maze()
 
     # driving_with_single_determined_driver()
-    driving_with_many_determined_drivers()
+    # driving_with_many_determined_drivers()
 
-    # driving_with_many_boats()
+    driving_with_many_boats()

@@ -259,9 +259,9 @@ def test_user_input():
     car1 = cars[0]
 
     # Spawn a driver
-    alpha_max = 0.5
-    v_max = 12  # 8
-    v_min = -4  # -4
+    alpha_max = 0.2
+    v_max = 10  # 8
+    v_min = -2  # -4
     agent = Agent(v_max, v_min, alpha_max)
     # Make it a limo!
     limo = Limo(vehicle=car1, driver=agent)
@@ -1869,5 +1869,6 @@ if __name__ == "__main__":
     while True:
         #    #test_milkman_full() # using sim_dt = decision_dt for numerical stability
         #    #test_milkman_smart_SC_update() # Also using sim_dt = decision_dt, but(!) waiting longer between SC update
-        test_milkman_smarter_SC_update()  # Uses decision_dt>>sim_dt, and only doing SC update once every decision update!
-    ##test_numerical_stability()
+        # test_milkman_smarter_SC_update()  # Uses decision_dt>>sim_dt, and only doing SC update once every decision update!
+        ##test_numerical_stability()
+        test_user_input()
