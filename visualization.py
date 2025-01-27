@@ -1787,7 +1787,7 @@ def map_circle_multi(
 
 
 def make_boat_scenario(
-    scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True, dt=0.1
+    scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=10, viz=True, dt=1.0
 ):
     # Spawn in the walls:
     # vertices = PointsOnCircum(r=100, n=50, center=(75, 55))
@@ -1796,71 +1796,61 @@ def make_boat_scenario(
     outer_rim = Object(
         center=np.array([0, 0]),
         vertices=np.array(
-            [[0, 0], [0, 100], [175, 100], [175, 0]]  # Outer boundary of the harbor
+            [[0, 0], [0, 110], [190, 110], [190, 0]]  # Outer boundary of the harbor
         ),
     )
 
-    # # Define piers
-    # pier1 = Object(
-    #     center=np.array([20, 10]),
-    #     vertices=np.array([[0, 10], [0, 30], [35, 30], [35, 10]]),  # Rectangular pier
-    # )
-
-    pier2 = Object(
+    pier1 = Object(
         center=np.array([80, 10]),
-        vertices=np.array(
-            [[70, 0], [70, 50], [80, 50], [80, 0]]
-        ),  # Slightly larger pier
+        vertices=np.array([[70, 0], [70, 40], [73, 40], [73, 0]]),
     )
-
-    pier3 = Object(
+    pier2 = Object(
         center=np.array([130, 10]),
-        vertices=np.array([[140, 0], [140, 35], [150, 35], [150, 0]]),  # Small pier
+        vertices=np.array([[145, 0], [145, 35], [150, 35], [150, 0]]),
+    )
+    pier3 = Object(
+        center=np.array([0, 0]),
+        vertices=np.array([[120, 80], [120, 90], [122, 90], [122, 80]]),
+    )
+    pier4 = Object(
+        center=np.array([0, 0]),
+        vertices=np.array([[122, 85], [122, 86], [125, 86], [125, 85]]),
     )
 
-    # # Define buildings
-    # building1 = Object(
-    #     center=np.array([10, 60]),
-    #     vertices=np.array(
-    #         [[10, 60], [10, 0], [40, 0], [40, 60]]
-    #     ),  # Rectangular building
-    # )
+    building1 = Object(
+        center=np.array([70, 70]),
+        vertices=np.array([[20, 80], [20, 90], [30, 90], [30, 80]]),
+    )
 
     building2 = Object(
-        center=np.array([70, 70]),
-        vertices=np.array([[70, 70], [70, 90], [95, 90], [95, 70]]),  # Another building
-    )
-
-    building3 = Object(
         center=np.array([130, 60]),
         vertices=np.array(
-            [[130, 60], [130, 90], [170, 90], [170, 60]]
-        ),  # Larger building
+            [[110, 60], [110, 80], [130, 80], [130, 60]]
+        ),
     )
 
-    # Volkswagen
     car1 = Vehicle(
-        np.array([35, 20]),
-        length=8,
-        width=4,
-        heading=0,
+        np.array([115, 85]),
+        length=8.0,
+        width=1.42,
+        heading=np.pi,
         tau_steering=0.4,
         tau_throttle=0.4,
         dt=dt,
     )
     car2 = Vehicle(
-        np.array([65, 20]),
-        length=8,
-        width=4,
-        heading=np.pi,
+        np.array([160, 20]),
+        length=8.0,
+        width=1.42,
+        heading=np.pi / 2,
         tau_steering=0.4,
         tau_throttle=0.4,
         dt=dt,
     )
     car3 = Vehicle(
         np.array([25, 55]),
-        length=8,
-        width=4,
+        length=8.0,
+        width=1.42,
         heading=0,
         tau_steering=0.4,
         tau_throttle=0.4,
@@ -1868,18 +1858,17 @@ def make_boat_scenario(
     )
     car4 = Vehicle(
         np.array([85, 55]),
-        length=8,
-        width=4,
+        length=8.0,
+        width=1.42,
         heading=np.pi,
         tau_steering=0.4,
         tau_throttle=0.4,
         dt=dt,
     )
-    # Extra
     car5 = Vehicle(
         np.array([65, 35]),
-        length=8,
-        width=4,
+        length=8.0,
+        width=1.42,
         heading=np.pi,
         tau_steering=0.4,
         tau_throttle=0.4,
@@ -1887,8 +1876,8 @@ def make_boat_scenario(
     )
     car6 = Vehicle(
         np.array([85, 35]),
-        length=8,
-        width=4,
+        length=8.0,
+        width=1.42,
         heading=0,
         tau_steering=0.4,
         tau_throttle=0.4,
@@ -1903,13 +1892,13 @@ def make_boat_scenario(
         car5,
         car6,
         outer_rim,
-        # pier1,
+        pier1,
         pier2,
         pier3,
-        # building1,
+        pier4,
+        building1,
         building2,
-        building3,
-    ]  # , wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    ]
     cars = [car1, car2, car3, car4, car5, car6]
 
     if viz:
@@ -1929,7 +1918,7 @@ def driving_with_many_boats():
     divider = 10
     dt = 1 / divider
     gfx, objects, cars = make_boat_scenario(
-        scale=1, height=1080, width=1920, pixels_per_unit=10, dt=dt
+        scale=1, scale_boat_phys=5, height=1080, width=1920, pixels_per_unit=10, dt=dt
     )
     # gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
     # gfx, objects, cars = map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
@@ -1937,8 +1926,8 @@ def driving_with_many_boats():
 
     # Spawn drivers
     alpha_max = 0.8  # boat
-    v_max = 7  # 6
-    v_min = -2
+    v_max = 2.5  # 6
+    v_min = -1
     limos = []
     for car in cars:
         agent = Agent(v_max, v_min, alpha_max)
