@@ -4,10 +4,11 @@ from math import sqrt
 from numba import jit
 
 class Object:
-    def __init__(self, center: np.array, vertices: List[np.array]):
+    def __init__(self, center: np.array, vertices: List[np.array], name: str = ""):
         #self.heading = heading
         self.position_center = center
         self.vertices = vertices
+        self.name = name
         # TODO: an object should be able to hold more than 4 sides
         #self.sides = [[vertices[0], vertices[1]],
         #              [vertices[1], vertices[2]],
@@ -166,3 +167,5 @@ class Object:
         distance = 5
         return distance
 
+    def get_name(self) -> str:
+        return self.name

@@ -1801,28 +1801,34 @@ def make_boat_scenario(
     )
 
     pier1 = Object(
+        name="Pier1",
         center=np.array([80, 10]),
         vertices=np.array([[70, 0], [70, 40], [73, 40], [73, 0]]),
     )
     pier2 = Object(
+        name="Pier2",
         center=np.array([130, 10]),
         vertices=np.array([[145, 0], [145, 35], [150, 35], [150, 0]]),
     )
     pier3 = Object(
+        name="Pier3",
         center=np.array([0, 0]),
         vertices=np.array([[120, 80], [120, 90], [122, 90], [122, 80]]),
     )
     pier4 = Object(
+        name="Pier4",
         center=np.array([0, 0]),
         vertices=np.array([[122, 85], [122, 86], [125, 86], [125, 85]]),
     )
 
     building1 = Object(
+        name="Building1",
         center=np.array([70, 70]),
         vertices=np.array([[20, 80], [20, 90], [30, 90], [30, 80]]),
     )
 
     building2 = Object(
+        name="Building2",
         center=np.array([130, 60]),
         vertices=np.array(
             [[110, 60], [110, 80], [130, 80], [130, 60]]
@@ -1926,7 +1932,7 @@ def driving_with_many_boats():
 
     # Spawn drivers
     alpha_max = 0.8  # boat
-    v_max = 2.5  # 6
+    v_max = 3.0  # 6
     v_min = -1
     limos = []
     for car in cars:
