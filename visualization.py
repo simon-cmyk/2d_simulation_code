@@ -1802,59 +1802,72 @@ def make_boat_scenario(
 
     pier1 = Object(
         name="Pier1",
-        center=np.array([80, 10]),
-        vertices=np.array([[70, 0], [70, 40], [73, 40], [73, 0]]),
+        center=np.array([0, 0]),
+        vertices=np.array([[65, 45], [65, 85], [68, 85], [68, 45]]),
     )
     pier2 = Object(
         name="Pier2",
-        center=np.array([130, 10]),
-        vertices=np.array([[145, 0], [145, 35], [150, 35], [150, 0]]),
+        center=np.array([0, 0]),
+        vertices=np.array([[105, 15], [105, 50], [111, 50], [111, 15]]),
     )
     pier3 = Object(
         name="Pier3",
         center=np.array([0, 0]),
-        vertices=np.array([[120, 80], [120, 90], [122, 90], [122, 80]]),
+        vertices=np.array([[105, 95], [105, 105], [107, 105], [107, 95]]),
     )
     pier4 = Object(
         name="Pier4",
         center=np.array([0, 0]),
-        vertices=np.array([[122, 85], [122, 86], [125, 86], [125, 85]]),
+        vertices=np.array([[107, 100], [107, 101], [110, 101], [110, 100]]),
     )
 
     building1 = Object(
         name="Building1",
         center=np.array([70, 70]),
-        vertices=np.array([[20, 80], [20, 90], [30, 90], [30, 80]]),
+        vertices=np.array([[150, 80], [150, 90], [160, 90], [160, 80]]),
     )
 
     building2 = Object(
         name="Building2",
         center=np.array([130, 60]),
         vertices=np.array(
-            [[110, 60], [110, 80], [130, 80], [130, 60]]
+            [[15, 15], [15, 35], [35, 35], [35, 15]]
         ),
     )
 
+    building3 = Object(
+        name="Building3",
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[170, 50], [170, 60], [180, 60], [180, 50]]
+        ),
+    )
+
+    # 0 = East
+    # np.pi/2 = South
+    # np.pi = West
+    # 3*np.pi/2 = North
+
     car1 = Vehicle(
-        np.array([115, 85]),
+        np.array([5, 85]),
         length=8.0,
         width=1.42,
-        heading=np.pi,
+        heading=3*np.pi/2,
         tau_steering=0.4,
         tau_throttle=0.4,
         dt=dt,
     )
     car2 = Vehicle(
-        np.array([160, 20]),
+        np.array([15, 75]),
         length=8.0,
         width=1.42,
-        heading=np.pi / 2,
+        heading=7*np.pi/4,
         tau_steering=0.4,
         tau_throttle=0.4,
         dt=dt,
     )
     car3 = Vehicle(
-        np.array([25, 55]),
+        np.array([10, 100]),
         length=8.0,
         width=1.42,
         heading=0,
@@ -1863,28 +1876,28 @@ def make_boat_scenario(
         dt=dt,
     )
     car4 = Vehicle(
-        np.array([85, 55]),
+        np.array([120, 15]),
         length=8.0,
         width=1.42,
-        heading=np.pi,
+        heading=np.pi/2,
         tau_steering=0.4,
         tau_throttle=0.4,
         dt=dt,
     )
     car5 = Vehicle(
-        np.array([65, 35]),
+        np.array([125, 10]),
         length=8.0,
         width=1.42,
-        heading=np.pi,
+        heading=0,
         tau_steering=0.4,
         tau_throttle=0.4,
         dt=dt,
     )
     car6 = Vehicle(
-        np.array([85, 35]),
+        np.array([175, 100]),
         length=8.0,
         width=1.42,
-        heading=0,
+        heading=3*np.pi/2,
         tau_steering=0.4,
         tau_throttle=0.4,
         dt=dt,
@@ -1900,10 +1913,11 @@ def make_boat_scenario(
         outer_rim,
         pier1,
         pier2,
-        pier3,
-        pier4,
+        # pier3,
+        # pier4,
         building1,
         building2,
+        # building3,
     ]
     cars = [car1, car2, car3, car4, car5, car6]
 
