@@ -2059,14 +2059,118 @@ def make_boat_scenario_bigger(
         return objects, cars
 
 
+def make_Ravnkloa(scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=6, viz=True, dt=1.0):
+    coordinates = np.array(
+        [[126.39535427, 149.8422699 ],
+        [115.46138954, 130.11746979],
+        [ 86.76639175, 150.74557495],
+        [  0.46530151, 152.47505188],
+        [  0.43069458, 140.13030243],
+        [ 87.36730957,  70.26836014],
+        [ 90.19123077,  48.68082428],
+        [114.17981434,  25.21247864],
+        [109.96723747,  16.53200459],
+        [122.74934292,  11.55437827],
+        [135.62853718,  18.23325992],
+        [174.84262848,   2.43239594],
+        [270.4261322,    3.00952625],
+        [271.41207886,  32.26862717],
+        [173.21274567,  77.90671921],
+        [164.97928238, 102.00750732],
+        [145.00814724, 113.59357452],
+        [152.41756439, 142.64183807]]
+ )
+
+    car1 = Vehicle(
+        np.array([121, 68]),
+        length=3.0,
+        width=1.5,
+        heading=3*np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car2 = Vehicle(
+        np.array([82, 104]),
+        length=3.0,
+        width=1.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car3 = Vehicle(
+        np.array([107, 75]),
+        length=3.0,
+        width=1.5,
+        heading=3*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car4 = Vehicle(
+        np.array([86, 126]),
+        length=3.0,
+        width=1.5,
+        heading=7*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car5 = Vehicle(
+        np.array([111, 54]),
+        length=3.0,
+        width=1.5,
+        heading=3*np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car6 = Vehicle(
+        np.array([161, 40]),
+        length=3.0,
+        width=1.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+
+    # Define the outer rim (harbor boundary)
+    outer_rim = Object(
+        center=np.array([0, 0]),
+        vertices=coordinates,
+    )
+
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        car5,
+        car6,
+        outer_rim
+    ]
+    cars = [car1, car2, car3, car4, car5, car6]
+
+    if viz:
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
+        return gfx, objects, cars
+    else:
+        return objects, cars
 
 
 def driving_with_many_boats():
     # Create a visualizer
     divider = 10
     dt = 1 / divider
-    gfx, objects, cars = make_boat_scenario_bigger(
-        scale=1, scale_boat_phys=5, height=1080, width=1920, pixels_per_unit=10, dt=dt
+    gfx, objects, cars = make_Ravnkloa(
+        scale=1, scale_boat_phys=5, height=1080, width=1920, dt=dt
     )
     # gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
     # gfx, objects, cars = map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
