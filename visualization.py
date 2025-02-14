@@ -1933,11 +1933,139 @@ def make_boat_scenario(
         return objects, cars
 
 
+def make_boat_scenario_bigger(
+    scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=10, viz=True, dt=1.0
+):
+    # Spawn in the walls:
+    # vertices = PointsOnCircum(r=100, n=50, center=(75, 55))
+
+    # Define the outer rim (harbor boundary)
+    outer_rim = Object(
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[60, 0], [30, 5], [5, 30], [0, 60], [0, 90], [5, 120], [30, 145], [60, 150], 
+            [140, 150], [170, 145], [195, 120], [200, 90], [200, 60], [195, 30], [170, 5], [140, 0]]  # Outer boundary of the harbor
+        ),
+    )
+
+    pier1 = Object(
+        name="Pier1",
+        center=np.array([0, 0]),
+        vertices=np.array([[155, 40], [155, 80], [158, 80], [158, 40]]),
+    )
+    pier2 = Object(
+        name="Pier2",
+        center=np.array([0, 0]),
+        vertices=np.array([[30, 30], [30, 65], [36, 65], [36, 30]]),
+    )
+
+    building1 = Object(
+        name="Building1",
+        center=np.array([0, 0]),
+        vertices=np.array([[110, 115], [110, 125], [120, 125], [120, 115]]),
+    )
+    building2 = Object(
+        name="Building2",
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[75, 65], [75, 85], [105, 85], [105, 65]]
+        ),
+    )
+
+    # 0 = East
+    # np.pi/2 = South
+    # np.pi = West
+    # 3*np.pi/2 = North
+
+    car1 = Vehicle(
+        np.array([80, 10]),
+        length=8.0,
+        width=1.42,
+        heading=3*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car2 = Vehicle(
+        np.array([10, 75]),
+        length=8.0,
+        width=1.42,
+        heading=np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car3 = Vehicle(
+        np.array([120, 10]),
+        length=8.0,
+        width=1.42,
+        heading=np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car4 = Vehicle(
+        np.array([80, 140]),
+        length=8.0,
+        width=1.42,
+        heading=5*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car5 = Vehicle(
+        np.array([190, 75]),
+        length=8.0,
+        width=1.42,
+        heading=5*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car6 = Vehicle(
+        np.array([120, 140]),
+        length=8.0,
+        width=1.42,
+        heading=7*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        car5,
+        car6,
+        outer_rim,
+        pier1,
+        pier2,
+        building1,
+        building2,
+    ]
+    cars = [car1, car2, car3, car4, car5, car6]
+
+    if viz:
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
+        return gfx, objects, cars
+    else:
+        return objects, cars
+
+
+
+
 def driving_with_many_boats():
     # Create a visualizer
     divider = 10
     dt = 1 / divider
-    gfx, objects, cars = make_boat_scenario(
+    gfx, objects, cars = make_boat_scenario_bigger(
         scale=1, scale_boat_phys=5, height=1080, width=1920, pixels_per_unit=10, dt=dt
     )
     # gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
