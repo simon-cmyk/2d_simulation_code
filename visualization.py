@@ -1934,7 +1934,7 @@ def make_boat_scenario(
 
 
 def make_boat_scenario_bigger(
-    scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=10, viz=True, dt=1.0
+    scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=6, viz=True, dt=1.0
 ):
     # Spawn in the walls:
     # vertices = PointsOnCircum(r=100, n=50, center=(75, 55))
@@ -1943,32 +1943,39 @@ def make_boat_scenario_bigger(
     outer_rim = Object(
         center=np.array([0, 0]),
         vertices=np.array(
-            [[60, 0], [30, 5], [5, 30], [0, 60], [0, 90], [5, 120], [30, 145], [60, 150], 
-            [140, 150], [170, 145], [195, 120], [200, 90], [200, 60], [195, 30], [170, 5], [140, 0]]  # Outer boundary of the harbor
+            [[60, 0], [30, 5], [5, 30], [0, 60], [0, 100], [5, 130], [30, 155], [60, 160], 
+            [240, 160], [270, 155], [295, 130], [300, 100], [300, 60], [295, 30], [270, 5], [240, 0]]  # Outer boundary of the harbor
         ),
     )
 
     pier1 = Object(
         name="Pier1",
         center=np.array([0, 0]),
-        vertices=np.array([[155, 40], [155, 80], [158, 80], [158, 40]]),
+        vertices=np.array([[190, 105], [190, 145], [193, 145], [193, 105]]),
     )
     pier2 = Object(
         name="Pier2",
         center=np.array([0, 0]),
-        vertices=np.array([[30, 30], [30, 65], [36, 65], [36, 30]]),
+        vertices=np.array([[155, 15], [155, 50], [161, 50], [161, 15]]),
     )
 
     building1 = Object(
         name="Building1",
         center=np.array([0, 0]),
-        vertices=np.array([[110, 115], [110, 125], [120, 125], [120, 115]]),
+        vertices=np.array([[85, 115], [85, 125], [95, 125], [95, 115]]),
     )
     building2 = Object(
         name="Building2",
         center=np.array([0, 0]),
         vertices=np.array(
-            [[75, 65], [75, 85], [105, 85], [105, 65]]
+            [[35, 55], [35, 75], [65, 75], [65, 55]]
+        ),
+    )
+    building3 = Object(
+        name="Building3",
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[225, 60], [225, 70], [235, 70], [235, 60]]
         ),
     )
 
@@ -2014,7 +2021,7 @@ def make_boat_scenario_bigger(
         dt=dt,
     )
     car5 = Vehicle(
-        np.array([190, 75]),
+        np.array([290, 80]),
         length=8.0,
         width=1.42,
         heading=5*np.pi/4,
@@ -2031,6 +2038,33 @@ def make_boat_scenario_bigger(
         tau_throttle=0.4,
         dt=dt,
     )
+    car7 = Vehicle(
+        np.array([90, 90]),
+        length=7.0,
+        width=2.3,
+        heading=7*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car8 = Vehicle(
+        np.array([140, 50]),
+        length=7.0,
+        width=2.3,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car9 = Vehicle(
+        np.array([190, 90]),
+        length=7.0,
+        width=2.3,
+        heading=0,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
 
     objects = [
         car1,
@@ -2039,13 +2073,17 @@ def make_boat_scenario_bigger(
         car4,
         car5,
         car6,
+        car7,
+        car8,
+        car9,
         outer_rim,
         pier1,
         pier2,
         building1,
         building2,
+        building3,
     ]
-    cars = [car1, car2, car3, car4, car5, car6]
+    cars = [car1, car2, car3, car4, car5, car6, car7, car8, car9]
 
     if viz:
         MAP_DIMENSIONS = (height * scale, width * scale)
@@ -2169,7 +2207,7 @@ def driving_with_many_boats():
     # Create a visualizer
     divider = 10
     dt = 1 / divider
-    gfx, objects, cars = make_Ravnkloa(
+    gfx, objects, cars = make_boat_scenario_bigger(
         scale=1, scale_boat_phys=5, height=1080, width=1920, dt=dt
     )
     # gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
