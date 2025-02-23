@@ -2099,39 +2099,49 @@ def make_boat_scenario_bigger(
 
 def make_Ravnkloa(scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=6, viz=True, dt=1.0):
     coordinates = np.array(
-        [[126.39535427, 149.8422699 ],
-        [115.46138954, 130.11746979],
-        [ 86.76639175, 150.74557495],
-        [  0.46530151, 152.47505188],
-        [  0.43069458, 140.13030243],
-        [ 87.36730957,  70.26836014],
-        [ 90.19123077,  48.68082428],
-        [114.17981434,  25.21247864],
-        [109.96723747,  16.53200459],
-        [122.74934292,  11.55437827],
-        [135.62853718,  18.23325992],
-        [174.84262848,   2.43239594],
-        [270.4261322,    3.00952625],
-        [271.41207886,  32.26862717],
-        [173.21274567,  77.90671921],
-        [164.97928238, 102.00750732],
-        [145.00814724, 113.59357452],
-        [152.41756439, 142.64183807]]
+        [
+            [1.27893567e+02, 1.50842699e+02],
+            [1.16813103e+02, 1.30938903e+02],
+            [8.66496169e+01, 1.50021924e+02],
+            [1.69939146e+00, 1.49406343e+02],
+            [1.69939146e+00, 1.38120685e+02],
+            [8.82911671e+01, 7.02015434e+01],
+            [8.66496169e+01, 5.00925529e+01],
+            [9.58833370e+01, 3.71653446e+01],
+            [1.12093646e+02, 2.34173613e+01],
+            [1.07784576e+02, 1.43888349e+01],
+            [1.19275428e+02, 6.79666503e+00],
+            [1.34254574e+02, 1.52096101e+01],
+            [1.62981703e+02, 7.20705259e+00],
+            [1.71599842e+02, 2.30464029e-01],
+            [2.77479833e+02, 1.05123915e+00],
+            [2.78505802e+02, 3.10095312e+01],
+            [2.62911075e+02, 3.49082131e+01],
+            [2.01763328e+02, 6.54820865e+01],
+            [2.05867204e+02, 7.65625506e+01],
+            [1.91708833e+02, 8.39495268e+01],
+            [1.82680306e+02, 7.34846439e+01],
+            [1.73036199e+02, 7.79989071e+01],
+            [1.74472555e+02, 8.74378210e+01],
+            [1.67495967e+02, 9.31832469e+01],
+            [1.68932323e+02, 9.89286728e+01],
+            [1.43693488e+02, 1.14728594e+02],
+            [1.50259689e+02, 1.44071305e+02]]
  )
 
     car1 = Vehicle(
         np.array([121, 68]),
-        length=3.0,
-        width=1.5,
+        length=5.0,
+        width=2.5,
         heading=3*np.pi/2,
-        tau_steering=0.2,
+        tau_steering=0.2, 
         tau_throttle=0.2,
         dt=dt,
     )
     car2 = Vehicle(
-        np.array([82, 104]),
-        length=3.0,
-        width=1.5,
+        np.array([82, 104]), 
+        length=5.0,
+        width=2.5,
         heading=np.pi/2,
         tau_steering=0.2,
         tau_throttle=0.2,
@@ -2139,8 +2149,8 @@ def make_Ravnkloa(scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_pe
     )
     car3 = Vehicle(
         np.array([107, 75]),
-        length=3.0,
-        width=1.5,
+        length=5.0, 
+        width=2.5,
         heading=3*np.pi/4,
         tau_steering=0.2,
         tau_throttle=0.2,
@@ -2148,8 +2158,8 @@ def make_Ravnkloa(scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_pe
     )
     car4 = Vehicle(
         np.array([86, 126]),
-        length=3.0,
-        width=1.5,
+        length=5.0,
+        width=2.5, 
         heading=7*np.pi/4,
         tau_steering=0.2,
         tau_throttle=0.2,
@@ -2157,8 +2167,8 @@ def make_Ravnkloa(scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_pe
     )
     car5 = Vehicle(
         np.array([111, 54]),
-        length=3.0,
-        width=1.5,
+        length=5.0,
+        width=2.5,
         heading=3*np.pi/2,
         tau_steering=0.2,
         tau_throttle=0.2,
@@ -2166,13 +2176,230 @@ def make_Ravnkloa(scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_pe
     )
     car6 = Vehicle(
         np.array([161, 40]),
-        length=3.0,
-        width=1.5,
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2, 
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car7 = Vehicle(
+        np.array([136, 98]),
+        length=5.0,
+        width=2.5,
         heading=np.pi/2,
         tau_steering=0.2,
         tau_throttle=0.2,
         dt=dt,
     )
+    car8 = Vehicle(
+        np.array([189, 65]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car9 = Vehicle(
+        np.array([142, 32]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car10 = Vehicle(
+        np.array([25, 128]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car11 = Vehicle(
+        np.array([175, 65]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car12 = Vehicle(
+        np.array([68, 112]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car13 = Vehicle(
+        np.array([155, 45]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car14 = Vehicle(
+        np.array([100, 45]),
+        length=5.0,
+        width=2.5,
+        heading=5*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car15 = Vehicle(
+        np.array([170, 60]),
+        length=5.0,
+        width=2.5,
+        heading=7*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car16 = Vehicle(
+        np.array([145, 75]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car17 = Vehicle(
+        np.array([140, 20]),
+        length=5.0,
+        width=2.5,
+        heading=0,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car18 = Vehicle(
+        np.array([220, 30]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car19 = Vehicle(
+        np.array([200, 40]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car20 = Vehicle(
+        np.array([180, 40]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car21 = Vehicle(
+        np.array([140, 54]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car22 = Vehicle(
+        np.array([110, 84]),
+        length=5.0,
+        width=2.5,
+        heading=5*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    # car23 = Vehicle(
+    #     np.array([195, 45]),
+    #     length=5.0,
+    #     width=2.5,
+    #     heading=7*np.pi/4,
+    #     tau_steering=0.2,
+    #     tau_throttle=0.2,
+    #     dt=dt,
+    # )
+    # car24 = Vehicle(
+    #     np.array([105, 110]),
+    #     length=5.0,
+    #     width=2.5,
+    #     heading=np.pi,
+    #     tau_steering=0.2,
+    #     tau_throttle=0.2,
+    #     dt=dt,
+    # )
+    # car25 = Vehicle(
+    #     np.array([150, 25]),
+    #     length=5.0,
+    #     width=2.5,
+    #     heading=0,
+    #     tau_steering=0.2,
+    #     tau_throttle=0.2,
+    #     dt=dt,
+    # )
+    # car26 = Vehicle(
+    #     np.array([105, 35]),
+    #     length=5.0,
+    #     width=2.5,
+    #     heading=np.pi/4,
+    #     tau_steering=0.2,
+    #     tau_throttle=0.2,
+    #     dt=dt,
+    # )
+    # car27 = Vehicle(
+    #     np.array([200, 80]),
+    #     length=5.0,
+    #     width=2.5,
+    #     heading=np.pi/2,
+    #     tau_steering=0.2,
+    #     tau_throttle=0.2,
+    #     dt=dt,
+    # )
+    # car28 = Vehicle(
+    #     np.array([125, 95]),
+    #     length=5.0,
+    #     width=2.5,
+    #     heading=3*np.pi/2,
+    #     tau_steering=0.2,
+    #     tau_throttle=0.2,
+    #     dt=dt,
+    # )
+    # car29 = Vehicle(
+    #     np.array([170, 55]),
+    #     length=5.0,
+    #     width=2.5,
+    #     heading=3*np.pi/4,
+    #     tau_steering=0.2,
+    #     tau_throttle=0.2,
+    #     dt=dt,
+    # )
+    # car30 = Vehicle(
+    #     np.array([95, 70]),
+    #     length=5.0,
+    #     width=2.5,
+    #     heading=5*np.pi/4,
+    #     tau_steering=0.2,
+    #     tau_throttle=0.2,
+    #     dt=dt,
+    # )
+
 
     # Define the outer rim (harbor boundary)
     outer_rim = Object(
@@ -2187,9 +2414,37 @@ def make_Ravnkloa(scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_pe
         car4,
         car5,
         car6,
+        car7,
+        car8,
+        car9,
+        car10,
+        car11,
+        car12,
+        car13,
+        car14,
+        car15,
+        car16,
+        car17,
+        car18,
+        car19,
+        car20,
+        car21,
+        car22,
+        # car23,
+        # car24,
+        # car25,
+        # car26,
+        # car27,
+        # car28,
+        # car29,
+        # car30,
         outer_rim
     ]
-    cars = [car1, car2, car3, car4, car5, car6]
+    cars = [car1, car2, car3, car4, car5, car6, car7, car8, car9, car10, 
+            car11, car12, car13, car14, car15, car16, car17, car18, car19, car20,
+            car21, car22
+            # , car23, car24, car25, car26, car27, car28, car29, car30
+            ]
 
     if viz:
         MAP_DIMENSIONS = (height * scale, width * scale)
@@ -2207,7 +2462,7 @@ def driving_with_many_boats():
     # Create a visualizer
     divider = 10
     dt = 1 / divider
-    gfx, objects, cars = make_boat_scenario_bigger(
+    gfx, objects, cars = make_Ravnkloa(
         scale=1, scale_boat_phys=5, height=1080, width=1920, dt=dt
     )
     # gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
@@ -2217,7 +2472,7 @@ def driving_with_many_boats():
     # Spawn drivers
     alpha_max = 0.8  # boat
     v_max = 3.0  # 6
-    v_min = -1
+    v_min = -1.5
     limos = []
     for car in cars:
         agent = Agent(v_max, v_min, alpha_max)
