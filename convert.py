@@ -35,4 +35,4 @@ def convert_json_to_csv(json_filepath, csv_filepath):
             writer.writerow(row)
 
 # Example usage
-convert_json_to_csv("extracted_data/boats/dynamics_simon.json", "9.csv")
+convert_json_to_csv("extracted_data/boats/dynamics_simon.json", "PyGemini_Scenario.csv")
