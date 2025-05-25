@@ -1,5 +1,6 @@
 __pycache__/
-extracted_data/
+extracted_data/boats/*
 .vscode
 DDPG/plotdata
 DDPG/rundata
+venv/

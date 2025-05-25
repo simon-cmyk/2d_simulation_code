@@ -1,24 +1,31 @@
-import pygame
+import copy
 import math
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pygame
+
+from Agent import Agent
+from limo import Limo
 from Object import Object
 from Vehicle import Vehicle
-from limo import Limo
-from Agent import Agent
-import copy
-import matplotlib.pyplot as plt
+
 plt.style.use("ggplot")
 import time
-from typing import List
 from time import time
+from typing import List
 
 
 class Visualization:
-    """
+    """ """
 
-    """
-
-    def __init__(self, dimentions, pixels_per_unit, robot_img_path="graphics/small_robot.png", map_img_path="graphics/test_map_2.png") -> None:
+    def __init__(
+        self,
+        dimentions,
+        pixels_per_unit,
+        robot_img_path="graphics/small_robot.png",
+        map_img_path="graphics/test_map_2.png",
+    ) -> None:
         pygame.init()
 
         # COLORS
@@ -33,7 +40,7 @@ class Visualization:
             self.robot = pygame.image.load(robot_img_path)
         except:
             print("No robot image")
-        
+
         self.map_img = pygame.image.load(map_img_path)
 
         # Dimensions
@@ -41,12 +48,12 @@ class Visualization:
         self.ppu = pixels_per_unit
 
         # Window settings
-        pygame.display.set_caption("Cordinated turn motion model: Vehicle") # Title
-        self.map = pygame.display.set_mode((self.width, self.height))       # Canvas
-        self.map.blit(self.map_img, (0, 0))                                 # Clear
+        pygame.display.set_caption("Cordinated turn motion model: Vehicle")  # Title
+        self.map = pygame.display.set_mode((self.width, self.height))  # Canvas
+        self.map.blit(self.map_img, (0, 0))  # Clear
 
-    def draw_robot(self, state, heading, alpha, d, robot : Vehicle = None):
-        """  For drawing the images on nicely. Inverted coordinates """
+    def draw_robot(self, state, heading, alpha, d, robot: Vehicle = None):
+        """For drawing the images on nicely. Inverted coordinates"""
         # Extract from state
         x = state[0, 0]
         y = state[1, 0]
@@ -54,35 +61,41 @@ class Visualization:
         v_y = state[3, 0]
         v = np.sqrt(v_x**2 + v_y**2)
 
-        rotated = pygame.transform.rotozoom(self.robot, math.degrees(heading), 1) # Rotate robot image to heading
-        
-        x, y = self.to_pygame(x, y)
-        rect = rotated.get_rect(center=(int(x), int(y))) # Bounding rectangle in world coordinates
-        self.map.blit(rotated, rect) # Draw roboto onto the map
+        rotated = pygame.transform.rotozoom(
+            self.robot, math.degrees(heading), 1
+        )  # Rotate robot image to heading
 
-        heading = -heading # World is flipped aboud x-axis.
-        # TODO: Does not rotate about center, but about back axel of vehicle.  
-        real_x = x - (d/2)*np.cos(heading)
-        real_y = y - (d/2)*np.sin(heading)
-        #pygame.draw.circle(self.map, self.red, (real_x, real_y), 3, 0)
+        x, y = self.to_pygame(x, y)
+        rect = rotated.get_rect(
+            center=(int(x), int(y))
+        )  # Bounding rectangle in world coordinates
+        self.map.blit(rotated, rect)  # Draw roboto onto the map
+
+        heading = -heading  # World is flipped aboud x-axis.
+        # TODO: Does not rotate about center, but about back axel of vehicle.
+        real_x = x - (d / 2) * np.cos(heading)
+        real_y = y - (d / 2) * np.sin(heading)
+        # pygame.draw.circle(self.map, self.red, (real_x, real_y), 3, 0)
         # Draw heading / other useful vectors
-        end_x = real_x + 5*v*np.cos(heading)
-        end_y = real_y + 5*v*np.sin(heading)
+        end_x = real_x + 5 * v * np.cos(heading)
+        end_y = real_y + 5 * v * np.sin(heading)
         pygame.draw.line(self.map, self.red, (real_x, real_y), (end_x, end_y), width=3)
 
         # Draw turn radius
-        if np.abs(np.tan(alpha))>1e-7:
-            end_x = real_x - d/np.tan(alpha)*np.cos(np.pi/2 + heading)
-            end_y = real_y - d/np.tan(alpha)*np.sin(np.pi/2 + heading)
-            pygame.draw.line(self.map, self.green, (real_x, real_y), (end_x, end_y), width=3)
+        if np.abs(np.tan(alpha)) > 1e-7:
+            end_x = real_x - d / np.tan(alpha) * np.cos(np.pi / 2 + heading)
+            end_y = real_y - d / np.tan(alpha) * np.sin(np.pi / 2 + heading)
+            pygame.draw.line(
+                self.map, self.green, (real_x, real_y), (end_x, end_y), width=3
+            )
         else:
             pass
 
         # Draw trajectory?
         if robot:
-            trajectory_robot = copy.deepcopy(robot) # To use the same parameters
+            trajectory_robot = copy.deepcopy(robot)  # To use the same parameters
             # Make sure that the state is equal
-            trajectory_robot.X = state 
+            trajectory_robot.X = state
             trajectory_robot.psi = heading
             trajectory_robot.alpha = alpha
 
@@ -93,14 +106,14 @@ class Visualization:
                 traj_x, traj_y = self.to_pygame(x, y)
                 pygame.draw.circle(self.map, self.blue, (traj_x, traj_y), 1, 0)
                 trajectory_robot.one_step_algorithm(alpha_ref=alpha, v_ref=v)
-           
+
     def to_pygame(self, x, y):
         """Convert coordinates into pygame coordinates (lower-left => top left)."""
         return (x, self.height - y)
-    
+
     def clear_canvas(self):
-        self.map.blit(self.map_img, (0,0))
-    
+        self.map.blit(self.map_img, (0, 0))
+
     def update_display(self):
         pygame.display.update()
 
@@ -109,41 +122,69 @@ class Visualization:
         _, _, P1, P2, _ = circog
         for i, ego_points in enumerate(P1):
             # Draw ego-hits
-            pygame.draw.circle(self.map, self.blue, (ego_points[0]*self.ppu, ego_points[1]*self.ppu), 2, 0)
-            #pygame.draw.line(self.map, self.red, (vehicle.position_center[0]*self.ppu, vehicle.position_center[1]*self.ppu), (ego_points[0]*self.ppu, ego_points[1]*self.ppu), width=2)
-            
+            pygame.draw.circle(
+                self.map,
+                self.blue,
+                (ego_points[0] * self.ppu, ego_points[1] * self.ppu),
+                2,
+                0,
+            )
+            # pygame.draw.line(self.map, self.red, (vehicle.position_center[0]*self.ppu, vehicle.position_center[1]*self.ppu), (ego_points[0]*self.ppu, ego_points[1]*self.ppu), width=2)
+
             # Draw lines between P1 and P2
             if P2[i] is not None:
-                start_x = vehicle.position_center[0]*self.ppu
-                start_y = vehicle.position_center[1]*self.ppu
-                end_x = P2[i][0]*self.ppu
-                end_y = P2[i][1]*self.ppu 
+                start_x = vehicle.position_center[0] * self.ppu
+                start_y = vehicle.position_center[1] * self.ppu
+                end_x = P2[i][0] * self.ppu
+                end_y = P2[i][1] * self.ppu
 
-                pygame.draw.line(self.map, color, (start_x, start_y), (end_x, end_y), width=2)
+                pygame.draw.line(
+                    self.map, color, (start_x, start_y), (end_x, end_y), width=2
+                )
                 pygame.draw.circle(self.map, color, (end_x, end_y), 5, 0)
 
         # Mark the center vehicle
-        #pygame.draw.circle(self.map, self.blue, (vehicle.position_center[0]*self.ppu, vehicle.position_center[1]*self.ppu), 6, 0)
-    
-    def draw_dynamic_circogram_data(self, dyn_circog, static_circog, risk_threshold=0.3, verbose=True):
+        # pygame.draw.circle(self.map, self.blue, (vehicle.position_center[0]*self.ppu, vehicle.position_center[1]*self.ppu), 6, 0)
+
+    def draw_dynamic_circogram_data(
+        self, dyn_circog, static_circog, risk_threshold=0.3, verbose=True
+    ):
         # Extract useful info:
         d1, d2, P1, P2, angles = static_circog
-        risks = dyn_circog[:,2]
+        risks = dyn_circog[:, 2]
         max_risk_index = np.argmax(risks)
         for n, angle in enumerate(angles):
             if P2[n] is not None:
-                start_x =  P1[n][0]*self.ppu
-                start_y =  P1[n][1]*self.ppu
-                end_x = P2[n][0]*self.ppu
-                end_y = P2[n][1]*self.ppu
-                if risks[n]>risk_threshold:
+                start_x = P1[n][0] * self.ppu
+                start_y = P1[n][1] * self.ppu
+                end_x = P2[n][0] * self.ppu
+                end_y = P2[n][1] * self.ppu
+                if risks[n] > risk_threshold:
                     if n == max_risk_index:
-                        pygame.draw.line(self.map, self.blue, (start_x, start_y), (end_x, end_y), width=3)
-                    else: 
-                        pygame.draw.line(self.map, self.red, (start_x, start_y), (end_x, end_y), width=3)
+                        pygame.draw.line(
+                            self.map,
+                            self.blue,
+                            (start_x, start_y),
+                            (end_x, end_y),
+                            width=3,
+                        )
+                    else:
+                        pygame.draw.line(
+                            self.map,
+                            self.red,
+                            (start_x, start_y),
+                            (end_x, end_y),
+                            width=3,
+                        )
                 else:
                     if verbose:
-                        pygame.draw.line(self.map, self.green, (start_x, start_y), (end_x, end_y), width=3)
+                        pygame.draw.line(
+                            self.map,
+                            self.green,
+                            (start_x, start_y),
+                            (end_x, end_y),
+                            width=3,
+                        )
 
     def draw_DC_3_data(self, risks, static_circog, risk_threshold=0.3, verbose=True):
         # Extract useful info:
@@ -151,43 +192,64 @@ class Visualization:
         max_risk_index = np.argmax(risks)
         for n, angle in enumerate(angles):
             if P2[n] is not None:
-                start_x =  P1[n][0]*self.ppu
-                start_y =  P1[n][1]*self.ppu
-                end_x = P2[n][0]*self.ppu
-                end_y = P2[n][1]*self.ppu
-                if risks[n]>risk_threshold:
+                start_x = P1[n][0] * self.ppu
+                start_y = P1[n][1] * self.ppu
+                end_x = P2[n][0] * self.ppu
+                end_y = P2[n][1] * self.ppu
+                if risks[n] > risk_threshold:
                     if n == max_risk_index:
-                        pygame.draw.line(self.map, self.blue, (start_x, start_y), (end_x, end_y), width=3)
-                    else: 
-                        pygame.draw.line(self.map, self.red, (start_x, start_y), (end_x, end_y), width=3)
+                        pygame.draw.line(
+                            self.map,
+                            self.blue,
+                            (start_x, start_y),
+                            (end_x, end_y),
+                            width=3,
+                        )
+                    else:
+                        pygame.draw.line(
+                            self.map,
+                            self.red,
+                            (start_x, start_y),
+                            (end_x, end_y),
+                            width=3,
+                        )
                 else:
                     if verbose:
-                        pygame.draw.line(self.map, self.green, (start_x, start_y), (end_x, end_y), width=3)
-    
-    def draw_all_objects(self, objects : List[Object], color=(0, 0, 0), width=6):
+                        pygame.draw.line(
+                            self.map,
+                            self.green,
+                            (start_x, start_y),
+                            (end_x, end_y),
+                            width=3,
+                        )
+
+    def draw_all_objects(self, objects: List[Object], color=(0, 0, 0), width=6):
         # First draw all vehicles
         for obj in objects:
             self.draw_one_object(obj, color, width)
 
     def draw_one_object(self, object, color=(0, 0, 0), width=6):
         for side in object.sides:
-            start_x = side[0][0]*self.ppu
-            start_y = side[0][1]*self.ppu
-            end_x = side[1][0]*self.ppu
-            end_y = side[1][1]*self.ppu
-            pygame.draw.line(self.map, color, (start_x, start_y), (end_x, end_y), width=width)
+            start_x = side[0][0] * self.ppu
+            start_y = side[0][1] * self.ppu
+            end_x = side[1][0] * self.ppu
+            end_y = side[1][1] * self.ppu
+            pygame.draw.line(
+                self.map, color, (start_x, start_y), (end_x, end_y), width=width
+            )
 
-
-    def draw_sides(self, sides : List[Object], color=(0, 0, 0), width=6):
+    def draw_sides(self, sides: List[Object], color=(0, 0, 0), width=6):
         # First draw all vehicles
         for side in sides:
-            start_x = side[0][0]*self.ppu
-            start_y = side[0][1]*self.ppu
-            end_x = side[1][0]*self.ppu
-            end_y = side[1][1]*self.ppu
-            pygame.draw.line(self.map, color, (start_x, start_y), (end_x, end_y), width=width)
+            start_x = side[0][0] * self.ppu
+            start_y = side[0][1] * self.ppu
+            end_x = side[1][0] * self.ppu
+            end_y = side[1][1] * self.ppu
+            pygame.draw.line(
+                self.map, color, (start_x, start_y), (end_x, end_y), width=width
+            )
 
-    def draw_headings(self, cars : List[Vehicle], scale : bool = True):
+    def draw_headings(self, cars: List[Vehicle], scale: bool = True):
         for car in cars:
             if scale:
                 # Scale with speed
@@ -198,122 +260,153 @@ class Visualization:
                 v = 2
 
             # Draw heading / other useful vectors
-            start_x = car.position_center[0]*self.ppu
-            start_y = car.position_center[1]*self.ppu
-            end_x = start_x + 2*np.cos(car.heading)*self.ppu + 2*v*np.cos(car.heading)*self.ppu
-            end_y = start_y + 2*np.sin(car.heading)*self.ppu + 2*v*np.sin(car.heading)*self.ppu
-            pygame.draw.line(self.map, self.green, (start_x, start_y), (end_x, end_y), width=4)
+            start_x = car.position_center[0] * self.ppu
+            start_y = car.position_center[1] * self.ppu
+            end_x = (
+                start_x
+                + 2 * np.cos(car.heading) * self.ppu
+                + 2 * v * np.cos(car.heading) * self.ppu
+            )
+            end_y = (
+                start_y
+                + 2 * np.sin(car.heading) * self.ppu
+                + 2 * v * np.sin(car.heading) * self.ppu
+            )
+            pygame.draw.line(
+                self.map, self.green, (start_x, start_y), (end_x, end_y), width=4
+            )
 
     def draw_center_and_headings_simple(self, heading, position_center):
         # Draw heading on single vehicle
         v = 2
         # Draw heading / other useful vectors
-        start_x = position_center[0]*self.ppu
-        start_y = position_center[1]*self.ppu
-        end_x = start_x + 2*np.cos(heading)*self.ppu + 2*v*np.cos(heading)*self.ppu
-        end_y = start_y + 2*np.sin(heading)*self.ppu + 2*v*np.sin(heading)*self.ppu
-        pygame.draw.line(self.map, self.green, (start_x, start_y), (end_x, end_y), width=4)
+        start_x = position_center[0] * self.ppu
+        start_y = position_center[1] * self.ppu
+        end_x = (
+            start_x
+            + 2 * np.cos(heading) * self.ppu
+            + 2 * v * np.cos(heading) * self.ppu
+        )
+        end_y = (
+            start_y
+            + 2 * np.sin(heading) * self.ppu
+            + 2 * v * np.sin(heading) * self.ppu
+        )
+        pygame.draw.line(
+            self.map, self.green, (start_x, start_y), (end_x, end_y), width=4
+        )
         # Draw centers
         pygame.draw.circle(self.map, self.green, (start_x, start_y), 7, 0)
 
     def draw_goal_state(self, goal_position, threshold=0, width=4):
-        center_x = goal_position[0]*self.ppu
-        center_y = goal_position[1]*self.ppu
+        center_x = goal_position[0] * self.ppu
+        center_y = goal_position[1] * self.ppu
         # Draw exact spot
         pygame.draw.circle(self.map, self.red, (center_x, center_y), width, 0)
         if threshold:
-            pygame.draw.circle(self.map, self.red, (center_x, center_y), threshold*self.ppu, 3)
-
+            pygame.draw.circle(
+                self.map, self.red, (center_x, center_y), threshold * self.ppu, 3
+            )
 
     def draw_goal_path(self, goal_path, current_goal_index, threshold=0):
         for i, goal in enumerate(goal_path):
-            center_x = goal[0]*self.ppu
-            center_y = goal[1]*self.ppu
+            center_x = goal[0] * self.ppu
+            center_y = goal[1] * self.ppu
             # Draw exact spot
             pygame.draw.circle(self.map, self.red, (center_x, center_y), 4, 0)
-            if i == current_goal_index: # Current goal gets a little ring
-                pygame.draw.circle(self.map, self.red, (center_x, center_y), threshold*self.ppu, 3)
+            if i == current_goal_index:  # Current goal gets a little ring
+                pygame.draw.circle(
+                    self.map, self.red, (center_x, center_y), threshold * self.ppu, 3
+                )
 
-    def draw_centers(self, cars : List[Vehicle]):
+    def draw_centers(self, cars: List[Vehicle]):
         for car in cars:
             # Retrieve centers
-            center_x = car.position_center[0]*self.ppu
-            center_y = car.position_center[1]*self.ppu
+            center_x = car.position_center[0] * self.ppu
+            center_y = car.position_center[1] * self.ppu
             pygame.draw.circle(self.map, self.green, (center_x, center_y), 7, 0)
 
-    def display_fps(self, fps, font_size=32, color="white", where=(0,0)):
+    def display_fps(self, fps, font_size=32, color="white", where=(0, 0)):
         "Renders the fonts as passed from display_fps"
         font = pygame.font.SysFont("Arial", 32)
         text_to_show = font.render(str(int(fps)), 0, pygame.Color(color))
         self.map.blit(text_to_show, where)
 
+
 ###################################################################
 ############################# TESTING #############################
 ###################################################################
-def PointsOnCircum(r,n=100, center=(0,0)):
-    circle_points=np.asarray([(np.cos(2*np.pi/n*x)*r,np.sin(2*np.pi/n*x)*r) for x in range(0,n+1)])
+def PointsOnCircum(r, n=100, center=(0, 0)):
+    circle_points = np.asarray(
+        [
+            (np.cos(2 * np.pi / n * x) * r, np.sin(2 * np.pi / n * x) * r)
+            for x in range(0, n + 1)
+        ]
+    )
     circle_points[:, 0] += center[0]
     circle_points[:, 1] += center[1]
     return circle_points
 
+
 def still_circogram_test():
-    # Spawn in 4 cars    
-    car1 = Vehicle(np.array([25, 25]), length=4, width=2, heading=np.pi/2) # np.pi/2
-    car2 = Vehicle(np.array([20, 28]), length=4, width=2, heading=np.pi/42)
-    car3 = Vehicle(np.array([30, 20]), length=4, width=2, heading=np.pi/8)
-    car4 = Vehicle(np.array([30, 30]), length=4, width=2, heading=np.pi/5)
+    # Spawn in 4 cars
+    car1 = Vehicle(np.array([25, 25]), length=4, width=2, heading=np.pi / 2)  # np.pi/2
+    car2 = Vehicle(np.array([20, 28]), length=4, width=2, heading=np.pi / 42)
+    car3 = Vehicle(np.array([30, 20]), length=4, width=2, heading=np.pi / 8)
+    car4 = Vehicle(np.array([30, 30]), length=4, width=2, heading=np.pi / 5)
     objects = [car1, car2, car3, car4]
-    
+
     # Testing Circogram
     N = 100
     horizon = 50
-    x = np.linspace(0, 2*np.pi, N)
+    x = np.linspace(0, 2 * np.pi, N)
     #
     before_time = time.time()
     circog = car1.static_circogram_2(N, [car2, car3, car4], horizon)
-    print("Time to calculate circogram with",N,"rays.", time.time()-before_time)
+    print("Time to calculate circogram with", N, "rays.", time.time() - before_time)
     d1, d2, P1, P2, angle = circog
-    
+
     """ Plotting """
-    x = np.linspace(0, 2*np.pi, N)
+    x = np.linspace(0, 2 * np.pi, N)
     plt.title("Car_1")
-    plt.plot(x, d1, 'b+', label='Ego perimeter')
-    plt.plot(x, d2, 'r+', label='Objects surrounding')
-    plt.legend(loc='best')
-    #plt.savefig('figures/Circogram_graph.pdf')
-    #plt.savefig('figures/Circogram_Car_1.png', dpi=300)
+    plt.plot(x, d1, "b+", label="Ego perimeter")
+    plt.plot(x, d2, "r+", label="Objects surrounding")
+    plt.legend(loc="best")
+    # plt.savefig('figures/Circogram_graph.pdf')
+    # plt.savefig('figures/Circogram_Car_1.png', dpi=300)
     plt.show()
 
     ##############
     # Visualize! #
     ##############
     MAP_DIMENSIONS = (800, 800)
-    gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=20, map_img_path="graphics/test_map_2.png") # Also initializes the display
-    
+    gfx = Visualization(
+        MAP_DIMENSIONS, pixels_per_unit=20, map_img_path="graphics/test_map_2.png"
+    )  # Also initializes the display
+
     gfx.clear_canvas()
-    gfx.draw_all_objects(objects) 
+    gfx.draw_all_objects(objects)
     gfx.draw_static_circogram_data(circog, car1)
 
     gfx.update_display()
     time.sleep(1000)
 
+
 def dynamic_circogram_test():
-    # Spawn in 4 cars    
-    car1 = Vehicle(np.array([22, 15]), length=4, width=2, heading=np.pi/2) # np.pi/2
-    car2 = Vehicle(np.array([20, 28]), length=4, width=2, heading=np.pi/42)
-    car3 = Vehicle(np.array([30, 20]), length=4, width=2, heading=np.pi/8)
-    car4 = Vehicle(np.array([30, 30]), length=4, width=2, heading=np.pi/5)
+    # Spawn in 4 cars
+    car1 = Vehicle(np.array([22, 15]), length=4, width=2, heading=np.pi / 2)  # np.pi/2
+    car2 = Vehicle(np.array([20, 28]), length=4, width=2, heading=np.pi / 42)
+    car3 = Vehicle(np.array([30, 20]), length=4, width=2, heading=np.pi / 8)
+    car4 = Vehicle(np.array([30, 30]), length=4, width=2, heading=np.pi / 5)
     objects = [car1, car2, car3, car4]
     # ...And a wall
-    wall1 = Object(np.array([20, 20]), vertices=np.array([[5, 5],
-                                                          [5, 55], 
-                                                          [55, 55],
-                                                          [40, 40],
-                                                          [55, 5],
-                                                          [35, 6]])) # Can now add more than 4 sides to objects!
+    wall1 = Object(
+        np.array([20, 20]),
+        vertices=np.array([[5, 5], [5, 55], [55, 55], [40, 40], [55, 5], [35, 6]]),
+    )  # Can now add more than 4 sides to objects!
     objects = [car1, car2, car3, car4]
     cars = [car1, car2, car3, car4]
-    
+
     # Testing Circogram
     N = 72
     horizon = 20
@@ -322,93 +415,183 @@ def dynamic_circogram_test():
     # Dynamic circogram:
     alpha_ref = 0.4
     v_ref = 1
-    dynamic_circogram = car1.dynamic_cicogram_1(static_circogram, alpha_ref=alpha_ref, v_ref=v_ref)
-    
+    dynamic_circogram = car1.dynamic_cicogram_1(
+        static_circogram, alpha_ref=alpha_ref, v_ref=v_ref
+    )
+
     """ Plotting """
     d1, d2, P1, P2, angles = static_circogram
     risks = dynamic_circogram[:, 2]
     real_distances = dynamic_circogram[:, 1]
-    #x = np.linspace(0, 2*np.pi, N)
+    # x = np.linspace(0, 2*np.pi, N)
     plt.title("Car_1")
-    plt.plot(angles, d1, 'b+', label='Ego perimeter')
-    plt.plot(angles, d2, 'r+', label='Objects surrounding')
-    plt.plot(angles, risks*100, "r.", label="Risks")
-    plt.plot(angles, real_distances, "g.", label = "real distances")
-    plt.legend(loc='best')
+    plt.plot(angles, d1, "b+", label="Ego perimeter")
+    plt.plot(angles, d2, "r+", label="Objects surrounding")
+    plt.plot(angles, risks * 100, "r.", label="Risks")
+    plt.plot(angles, real_distances, "g.", label="real distances")
+    plt.legend(loc="best")
     plt.xlabel("Angle[rad]")
     plt.ylabel("Distance[units]")
-    #plt.savefig('figures/Circogram_graph.pdf')
-    #plt.savefig('figures/Circogram_Car_1.png', dpi=300)
+    # plt.savefig('figures/Circogram_graph.pdf')
+    # plt.savefig('figures/Circogram_Car_1.png', dpi=300)
     plt.show()
 
     ##############
     # Visualize! #
     ##############
     MAP_DIMENSIONS = (1200, 1200)
-    gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=20, map_img_path="graphics/test_map_2.png") # Also initializes the display
+    gfx = Visualization(
+        MAP_DIMENSIONS, pixels_per_unit=20, map_img_path="graphics/test_map_2.png"
+    )  # Also initializes the display
     gfx.clear_canvas()
-    gfx.draw_all_objects(objects) 
+    gfx.draw_all_objects(objects)
     gfx.draw_static_circogram_data(static_circogram, car1)
     gfx.draw_centers(cars)
     gfx.draw_headings(cars)
     gfx.update_display()
     time.sleep(1000)
 
+
 def map_circles_multi(scale=1, height=1080, width=1920, pixels_per_unit=20):
     # Create a visualizer
-    MAP_DIMENSIONS = (height*scale, width*scale)
-    gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
+    MAP_DIMENSIONS = (height * scale, width * scale)
+    gfx = Visualization(
+        MAP_DIMENSIONS,
+        pixels_per_unit=pixels_per_unit,
+        map_img_path="graphics/test_map_2.png",
+    )  # Also initializes the display
     # Spawn in the walls:
-    outer_circle_points = PointsOnCircum(r=scale*36, n=50, center=(37*scale, 36*scale))
+    outer_circle_points = PointsOnCircum(
+        r=scale * 36, n=50, center=(37 * scale, 36 * scale)
+    )
     wall1 = Object(np.array([20, 20]), vertices=outer_circle_points)
-    #wall1 = Object(np.array([20, 20]), vertices=np.array([[5, 17], # A tunnel
-    #                                                      [55, 17], 
+    # wall1 = Object(np.array([20, 20]), vertices=np.array([[5, 17], # A tunnel
+    #                                                      [55, 17],
     #                                                      [55, 23],
-    #                                                      [5, 23]])) 
+    #                                                      [5, 23]]))
 
-    small_circle_points = PointsOnCircum(r=8*scale, n=15, center=(35*scale, 44*scale))
+    small_circle_points = PointsOnCircum(
+        r=8 * scale, n=15, center=(35 * scale, 44 * scale)
+    )
     wall2 = Object(np.array([35, 20]), vertices=small_circle_points)
-    small_circle_points = PointsOnCircum(r=8*scale, n=4, center=(23*scale, 33*scale))
+    small_circle_points = PointsOnCircum(
+        r=8 * scale, n=4, center=(23 * scale, 33 * scale)
+    )
     wall3 = Object(np.array([20, 20]), vertices=small_circle_points)
-    small_circle_points = PointsOnCircum(r=8*scale, n=6, center=(37*scale, 73*scale))
+    small_circle_points = PointsOnCircum(
+        r=8 * scale, n=6, center=(37 * scale, 73 * scale)
+    )
     wall4 = Object(np.array([20, 20]), vertices=small_circle_points)
-    small_circle_points = PointsOnCircum(r=8*scale, n=8, center=(30*scale, 13*scale))
+    small_circle_points = PointsOnCircum(
+        r=8 * scale, n=8, center=(30 * scale, 13 * scale)
+    )
     wall5 = Object(np.array([20, 20]), vertices=small_circle_points)
-    small_circle_points = PointsOnCircum(r=8*scale, n=30, center=(55*scale, 30*scale))
+    small_circle_points = PointsOnCircum(
+        r=8 * scale, n=30, center=(55 * scale, 30 * scale)
+    )
     wall6 = Object(np.array([20, 20]), vertices=small_circle_points)
-    small_circle_points = PointsOnCircum(r=10*scale, n=4, center=(-5*scale, 30*scale))
+    small_circle_points = PointsOnCircum(
+        r=10 * scale, n=4, center=(-5 * scale, 30 * scale)
+    )
     wall7 = Object(np.array([20, 20]), vertices=small_circle_points)
 
     # Spawn in 2 limo-cars
-    car1 = Vehicle(np.array([20*scale, 20*scale]), length=4*scale, width=2*scale, heading=np.pi/2, tau_steering=1, tau_throttle=1) #np.pi/2
-    car2 = Vehicle(np.array([60*scale, 20*scale]), length=6*scale, width=3*scale, heading=np.pi, tau_steering=1, tau_throttle=1)
-    car3 = Vehicle(np.array([60*scale, 50*scale]), length=4*scale, width=2*scale, heading=0, tau_steering=1, tau_throttle=1)
-    car4 = Vehicle(np.array([50*scale, 30*scale]), length=4*scale, width=2*scale, heading=3*np.pi/2, tau_steering=1, tau_throttle=1)
+    car1 = Vehicle(
+        np.array([20 * scale, 20 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=np.pi / 2,
+        tau_steering=1,
+        tau_throttle=1,
+    )  # np.pi/2
+    car2 = Vehicle(
+        np.array([60 * scale, 20 * scale]),
+        length=6 * scale,
+        width=3 * scale,
+        heading=np.pi,
+        tau_steering=1,
+        tau_throttle=1,
+    )
+    car3 = Vehicle(
+        np.array([60 * scale, 50 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=0,
+        tau_steering=1,
+        tau_throttle=1,
+    )
+    car4 = Vehicle(
+        np.array([50 * scale, 30 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=3 * np.pi / 2,
+        tau_steering=1,
+        tau_throttle=1,
+    )
 
-    objects = [car1, car2, car3, car4, wall1, wall2]#, wall3, wall4, wall5, wall6, wall7]
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        wall1,
+        wall2,
+    ]  # , wall3, wall4, wall5, wall6, wall7]
     cars = [car1, car2, car3, car4]
     return gfx, objects, cars
 
+
 def map_maze(scale=1, height=1080, width=1920, pixels_per_unit=20):
     # Create a visualizer
-    MAP_DIMENSIONS = (height*scale, width*scale)
-    gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
-    
+    MAP_DIMENSIONS = (height * scale, width * scale)
+    gfx = Visualization(
+        MAP_DIMENSIONS,
+        pixels_per_unit=pixels_per_unit,
+        map_img_path="graphics/test_map_2.png",
+    )  # Also initializes the display
+
     # Spawn in the walls:
     vertices = np.array([[5, 5], [5, 105], [180, 105], [180, 5]])
     wall1 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[20, 20], [20, 105//2], [180//2, 105//2], [180//2, 20]])
+    vertices = np.array(
+        [[20, 20], [20, 105 // 2], [180 // 2, 105 // 2], [180 // 2, 20]]
+    )
     wall2 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[20, 105//2 + 20], [20, 105-10], [180//2, 105-10], [180//2, 105//2+20]])
+    vertices = np.array(
+        [
+            [20, 105 // 2 + 20],
+            [20, 105 - 10],
+            [180 // 2, 105 - 10],
+            [180 // 2, 105 // 2 + 20],
+        ]
+    )
     wall3 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[180//2 + 20, 20], [180//2 + 20, 105//2], [180-20, 105//2], [180-20, 20]])
+    vertices = np.array(
+        [
+            [180 // 2 + 20, 20],
+            [180 // 2 + 20, 105 // 2],
+            [180 - 20, 105 // 2],
+            [180 - 20, 20],
+        ]
+    )
     wall4 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[180//2 + 20, 105//2+20], [180//2 + 20, 105-10], [180-20, 105-10], [180-20, 105//2+20]])
+    vertices = np.array(
+        [
+            [180 // 2 + 20, 105 // 2 + 20],
+            [180 // 2 + 20, 105 - 10],
+            [180 - 20, 105 - 10],
+            [180 - 20, 105 // 2 + 20],
+        ]
+    )
     wall5 = Object(np.array([0, 0]), vertices=vertices)
     # Obstacles
-    vertices = np.array([[70, 105//2], [70, 105//2+20], [80, 105//2+20], [80, 105//2]])
+    vertices = np.array(
+        [[70, 105 // 2], [70, 105 // 2 + 20], [80, 105 // 2 + 20], [80, 105 // 2]]
+    )
     wall6 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[180//2, 90], [180//2+20, 90], [180//2+20, 80], [180//2, 80]])
+    vertices = np.array(
+        [[180 // 2, 90], [180 // 2 + 20, 90], [180 // 2 + 20, 80], [180 // 2, 80]]
+    )
     wall7 = Object(np.array([0, 0]), vertices=vertices)
     vertices = np.array([[40, 5], [40, 20], [45, 20], [45, 5]])
     wall8 = Object(np.array([0, 0]), vertices=vertices)
@@ -420,33 +603,89 @@ def map_maze(scale=1, height=1080, width=1920, pixels_per_unit=20):
     wall10 = Object(np.array([0, 0]), vertices=vertices)
 
     # Spawn in 2 limo-cars
-    car1 = Vehicle(np.array([10*scale, 10*scale]), length=4*scale, width=2*scale, heading=0, tau_steering=0.4, tau_throttle=0.4) #np.pi/2
-    car2 = Vehicle(np.array([60*scale, 10*scale]), length=4*scale, width=2*scale, heading=np.pi)
+    car1 = Vehicle(
+        np.array([10 * scale, 10 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+    )  # np.pi/2
+    car2 = Vehicle(
+        np.array([60 * scale, 10 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=np.pi,
+    )
 
-    objects = [car1, car2, wall1, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    objects = [
+        car1,
+        car2,
+        wall1,
+        wall2,
+        wall3,
+        wall4,
+        wall5,
+        wall6,
+        wall7,
+        wall8,
+        wall9,
+    ]  # , wall10]
     cars = [car1, car2]
     return gfx, objects, cars
 
+
 def map_maze_multi(scale=1, height=1080, width=1920, pixels_per_unit=20):
     # Create a visualizer
-    MAP_DIMENSIONS = (height*scale, width*scale)
-    gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
-    
+    MAP_DIMENSIONS = (height * scale, width * scale)
+    gfx = Visualization(
+        MAP_DIMENSIONS,
+        pixels_per_unit=pixels_per_unit,
+        map_img_path="graphics/test_map_2.png",
+    )  # Also initializes the display
+
     # Spawn in the walls:
     vertices = np.array([[5, 5], [5, 105], [180, 105], [180, 5]])
     wall1 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[20, 20], [20, 105//2], [180//2, 105//2], [180//2, 20]])
+    vertices = np.array(
+        [[20, 20], [20, 105 // 2], [180 // 2, 105 // 2], [180 // 2, 20]]
+    )
     wall2 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[20, 105//2 + 20], [20, 105-10], [180//2, 105-10], [180//2, 105//2+20]])
+    vertices = np.array(
+        [
+            [20, 105 // 2 + 20],
+            [20, 105 - 10],
+            [180 // 2, 105 - 10],
+            [180 // 2, 105 // 2 + 20],
+        ]
+    )
     wall3 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[180//2 + 20, 20], [180//2 + 20, 105//2], [180-20, 105//2], [180-20, 20]])
+    vertices = np.array(
+        [
+            [180 // 2 + 20, 20],
+            [180 // 2 + 20, 105 // 2],
+            [180 - 20, 105 // 2],
+            [180 - 20, 20],
+        ]
+    )
     wall4 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[180//2 + 20, 105//2+20], [180//2 + 20, 105-10], [180-20, 105-10], [180-20, 105//2+20]])
+    vertices = np.array(
+        [
+            [180 // 2 + 20, 105 // 2 + 20],
+            [180 // 2 + 20, 105 - 10],
+            [180 - 20, 105 - 10],
+            [180 - 20, 105 // 2 + 20],
+        ]
+    )
     wall5 = Object(np.array([0, 0]), vertices=vertices)
     # Obstacles
-    vertices = np.array([[70, 105//2], [70, 105//2+20], [80, 105//2+20], [80, 105//2]])
+    vertices = np.array(
+        [[70, 105 // 2], [70, 105 // 2 + 20], [80, 105 // 2 + 20], [80, 105 // 2]]
+    )
     wall6 = Object(np.array([0, 0]), vertices=vertices)
-    vertices = np.array([[180//2, 90], [180//2+20, 90], [180//2+20, 80], [180//2, 80]])
+    vertices = np.array(
+        [[180 // 2, 90], [180 // 2 + 20, 90], [180 // 2 + 20, 80], [180 // 2, 80]]
+    )
     wall7 = Object(np.array([0, 0]), vertices=vertices)
     vertices = np.array([[40, 5], [40, 20], [45, 20], [45, 5]])
     wall8 = Object(np.array([0, 0]), vertices=vertices)
@@ -454,28 +693,71 @@ def map_maze_multi(scale=1, height=1080, width=1920, pixels_per_unit=20):
     wall9 = Object(np.array([0, 0]), vertices=vertices)
 
     # Spawn in 4 cars
-    car1 = Vehicle(np.array([10*scale, 10*scale]), length=4*scale, width=2*scale, heading=np.pi/2, tau_steering=0.5, tau_throttle=0.5) 
-    car2 = Vehicle(np.array([10*scale, 80*scale]), length=6*scale, width=3*scale, heading=np.pi, tau_steering=0.5, tau_throttle=0.5)
-    car3 = Vehicle(np.array([90*scale, 70*scale]), length=4*scale, width=2*scale, heading=0, tau_steering=0.5, tau_throttle=0.5)
-    car4 = Vehicle(np.array([100*scale, 30*scale]), length=4*scale, width=2*scale, heading=3*np.pi/2, tau_steering=0.5, tau_throttle=0.5)
+    car1 = Vehicle(
+        np.array([10 * scale, 10 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=np.pi / 2,
+        tau_steering=0.5,
+        tau_throttle=0.5,
+    )
+    car2 = Vehicle(
+        np.array([10 * scale, 80 * scale]),
+        length=6 * scale,
+        width=3 * scale,
+        heading=np.pi,
+        tau_steering=0.5,
+        tau_throttle=0.5,
+    )
+    car3 = Vehicle(
+        np.array([90 * scale, 70 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=0,
+        tau_steering=0.5,
+        tau_throttle=0.5,
+    )
+    car4 = Vehicle(
+        np.array([100 * scale, 30 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=3 * np.pi / 2,
+        tau_steering=0.5,
+        tau_throttle=0.5,
+    )
 
-    objects = [car1, car2, car3, car4, wall1, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        wall1,
+        wall2,
+        wall3,
+        wall4,
+        wall5,
+        wall6,
+        wall7,
+        wall8,
+        wall9,
+    ]  # , wall10]
     cars = [car1, car2, car3, car4]
     return gfx, objects, cars
 
+
 def driving_with_single_random_driver():
     # Create a visualizer
-    #gfx, objects, cars = map_circles(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    #gfx, objects, cars = map_maze(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    # gfx, objects, cars = map_circles(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    # gfx, objects, cars = map_maze(scale=1, height=1080, width=1920, pixels_per_unit=10)
     gfx, objects, cars = map_tube(scale=1, height=1080, width=1920, pixels_per_unit=10)
     car1 = cars[0]
 
     # Spawn a driver
     alpha_max = 0.9
-    v_max = 8 # 8
-    v_min = -4 # -4
-    var_alpha = 0.3 # 0.3
-    var_vel = 1 # 0.3
+    v_max = 8  # 8
+    v_min = -4  # -4
+    var_alpha = 0.3  # 0.3
+    var_vel = 1  # 0.3
     agent = Agent(v_max, v_min, alpha_max, var_vel, var_alpha)
     # Make it a limo!
     limo = Limo(vehicle=car1, driver=agent)
@@ -485,46 +767,48 @@ def driving_with_single_random_driver():
     circograms = True
     # TODO: move these params to the agent!
     alpha_ref = 0
-    v_ref = 4 # 4
+    v_ref = 4  # 4
     collision = False
     for i in range(steps):
         if not collision:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: # Press x button
+                if event.type == pygame.QUIT:  # Press x button
                     exit()
 
-            
             ##############
             # Visualize! #
-            ##############   
+            ##############
             gfx.clear_canvas()
-            gfx.draw_all_objects(objects) 
+            gfx.draw_all_objects(objects)
             if circograms:
                 # Generate circogram
                 N = 36
                 horizon = 100
                 #
                 static_circogram = car1.static_circogram_2(N, objects[1:], horizon)
-                dynamic_circogram = car1.dynamic_cicogram_2(static_circogram, alpha_ref, v_ref, seconds=10)
+                dynamic_circogram = car1.dynamic_cicogram_2(
+                    static_circogram, alpha_ref, v_ref, seconds=10
+                )
                 d1, d2, _, _, _ = static_circogram
-                #collision = car1.collision_check(d1, d2)
-                #gfx.draw_static_circogram_data(static_circogram, car1)
-                gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=0, verbose=False)
+                # collision = car1.collision_check(d1, d2)
+                # gfx.draw_static_circogram_data(static_circogram, car1)
+                gfx.draw_dynamic_circogram_data(
+                    dynamic_circogram, static_circogram, risk_threshold=0, verbose=False
+                )
 
-
-            #gfx.draw_headings(cars, scale=True)
+            # gfx.draw_headings(cars, scale=True)
             gfx.draw_centers(cars)
             gfx.update_display()
-            #time.sleep(1000)
+            # time.sleep(1000)
 
             ##############
             # Kinematics #
             ##############
-            #if (i*limo.vehicle.dt).is_integer: # Checks only for new commands on whole seconds
+            # if (i*limo.vehicle.dt).is_integer: # Checks only for new commands on whole seconds
             #    #v_ref, alpha_ref = limo.driver.new_brownian_dc_action(dynamic_circogram, v_ref, alpha_ref, risk_threshold=0.7, stop_threshold=4, r_factor=0.05)
             #    #v_ref, alpha_ref = limo.driver.experimental_driving_action(dynamic_circogram, v_ref, alpha_ref, risk_threshold=0.5, stop_threshold=8, r_factor=0.05)
             #    _, alpha_ref = limo.driver.brownian_action(v_ref, alpha_ref, 0.05)
-                
+
             # Run one cycle
             limo.vehicle.one_step_algorithm(alpha_ref=alpha_ref, v_ref=v_ref)
         else:
@@ -532,17 +816,20 @@ def driving_with_single_random_driver():
             v_ref = 0
             alpha_ref = 0
 
+
 def driving_with_multiple_random_drivers():
     # Create a visualizer
-    gfx, objects, cars = map_circles_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    #gfx, objects, cars = map_maze(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    gfx, objects, cars = map_circles_multi(
+        scale=1, height=1080, width=1920, pixels_per_unit=10
+    )
+    # gfx, objects, cars = map_maze(scale=1, height=1080, width=1920, pixels_per_unit=10)
 
     # Spawn a driver
     alpha_max = 1
-    v_max = 8 # 8
-    v_min = -4 # -4
-    var_alpha = 0.3 # 0.3
-    var_vel = 1 # 0.3
+    v_max = 8  # 8
+    v_min = -4  # -4
+    var_alpha = 0.3  # 0.3
+    var_vel = 1  # 0.3
     agent1 = Agent(v_max, v_min, alpha_max, var_vel, var_alpha)
     agent2 = Agent(v_max, v_min, alpha_max, var_vel, var_alpha)
     agent3 = Agent(v_max, v_min, alpha_max, var_vel, var_alpha)
@@ -558,18 +845,18 @@ def driving_with_multiple_random_drivers():
     steps = 100000
     # TODO: move these params to the agent?
     alpha_refs = [0, 0, 0, 0]
-    v_refs = [4, 4, 1, v_max] 
+    v_refs = [4, 4, 1, v_max]
     for i in range(steps):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: # Press x button
+            if event.type == pygame.QUIT:  # Press x button
                 exit()
 
         ##############
         # Visualize! #
-        ##############   
+        ##############
         gfx.clear_canvas()
-        gfx.draw_all_objects(objects) 
-        
+        gfx.draw_all_objects(objects)
+
         # Generate circogram
         N = 36
         horizon = 100
@@ -577,44 +864,61 @@ def driving_with_multiple_random_drivers():
         DCs = []
         SCs = []
         for n, car in enumerate(cars):
-            static_circogram = car.static_circogram_2(N, objects[0:n]+objects[n+1:], horizon)
-            dynamic_circogram = car.dynamic_cicogram_1(static_circogram, alpha_refs[n], v_refs[n], seconds=3)
+            static_circogram = car.static_circogram_2(
+                N, objects[0:n] + objects[n + 1 :], horizon
+            )
+            dynamic_circogram = car.dynamic_cicogram_1(
+                static_circogram, alpha_refs[n], v_refs[n], seconds=3
+            )
             d1, d2, _, _, _ = static_circogram
             car.collision_check(d1, d2)
-            #gfx.draw_static_circogram_data(static_circogram, car)
-            gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=0.7, verbose=False)
+            # gfx.draw_static_circogram_data(static_circogram, car)
+            gfx.draw_dynamic_circogram_data(
+                dynamic_circogram, static_circogram, risk_threshold=0.7, verbose=False
+            )
             DCs.append(dynamic_circogram)
             SCs.append(static_circogram)
-
 
         gfx.draw_headings(cars, scale=True)
         gfx.draw_centers(cars)
         gfx.update_display()
-        #time.sleep(1000)
+        # time.sleep(1000)
 
         ##############
         # Kinematics #
         ##############
         for n, limo in enumerate(limos):
             if not limo.vehicle.collided:
-                if (i*limo.vehicle.dt).is_integer: # Checks only for new commands on whole seconds
-                    #v_refs[n], alpha_refs[n] = limo.driver.new_brownian_dc_action(DCs[n], v_refs[n], alpha_refs[n], risk_threshold=0.7, stop_threshold=4, r_factor=0.05)
-                    v_refs[n], alpha_refs[n] = limo.driver.experimental_driving_action(DCs[n], v_refs[n], alpha_refs[n], risk_threshold=0.7, stop_threshold=4, r_factor=0.05)
+                if (
+                    i * limo.vehicle.dt
+                ).is_integer:  # Checks only for new commands on whole seconds
+                    # v_refs[n], alpha_refs[n] = limo.driver.new_brownian_dc_action(DCs[n], v_refs[n], alpha_refs[n], risk_threshold=0.7, stop_threshold=4, r_factor=0.05)
+                    v_refs[n], alpha_refs[n] = limo.driver.experimental_driving_action(
+                        DCs[n],
+                        v_refs[n],
+                        alpha_refs[n],
+                        risk_threshold=0.7,
+                        stop_threshold=4,
+                        r_factor=0.05,
+                    )
                 # Run one cycle
             else:
                 v_refs[n], alpha_refs[n] = (0, 0)
             limo.vehicle.one_step_algorithm(alpha_ref=alpha_refs[n], v_ref=v_refs[n])
 
+
 def driving_with_multiple_random_drivers_maze():
     # Create a visualizer
-    gfx, objects, cars = map_maze_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    
+    gfx, objects, cars = map_maze_multi(
+        scale=1, height=1080, width=1920, pixels_per_unit=10
+    )
+
     # Spawn drivers
     alpha_max = 1
-    v_max = 8 # 8
-    v_min = -4 # -4
-    var_alpha = 0.3 # 0.3
-    var_vel = 1 # 0.3
+    v_max = 8  # 8
+    v_min = -4  # -4
+    var_alpha = 0.3  # 0.3
+    var_vel = 1  # 0.3
     limos = []
     for car in cars:
         agent = Agent(v_max, v_min, alpha_max, var_vel, var_alpha)
@@ -626,18 +930,18 @@ def driving_with_multiple_random_drivers_maze():
     steps = 100000
     # TODO: move these params to the agent?
     alpha_refs = [0, 0, 0, 0]
-    v_refs = [4, 4, 4, 4] 
+    v_refs = [4, 4, 4, 4]
     for i in range(steps):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: # Press x button
+            if event.type == pygame.QUIT:  # Press x button
                 exit()
 
         ##############
         # Visualize! #
-        ##############   
+        ##############
         gfx.clear_canvas()
-        gfx.draw_all_objects(objects) 
-        
+        gfx.draw_all_objects(objects)
+
         # Generate circogram
         N = 36
         horizon = 100
@@ -645,60 +949,92 @@ def driving_with_multiple_random_drivers_maze():
         DCs = []
         SCs = []
         for n, car in enumerate(cars):
-            static_circogram = car.static_circogram_2(N, objects[0:n]+objects[n+1:], horizon)
-            dynamic_circogram = car.dynamic_cicogram_1(static_circogram, alpha_refs[n], v_refs[n], seconds=3)
+            static_circogram = car.static_circogram_2(
+                N, objects[0:n] + objects[n + 1 :], horizon
+            )
+            dynamic_circogram = car.dynamic_cicogram_1(
+                static_circogram, alpha_refs[n], v_refs[n], seconds=3
+            )
             d1, d2, _, _, _ = static_circogram
             car.collision_check(d1, d2)
-            #gfx.draw_static_circogram_data(static_circogram, car)
-            gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=0.7, verbose=False)
+            # gfx.draw_static_circogram_data(static_circogram, car)
+            gfx.draw_dynamic_circogram_data(
+                dynamic_circogram, static_circogram, risk_threshold=0.7, verbose=False
+            )
             DCs.append(dynamic_circogram)
             SCs.append(static_circogram)
-
 
         gfx.draw_headings(cars, scale=True)
         gfx.draw_centers(cars)
         gfx.update_display()
-        #time.sleep(1000)
+        # time.sleep(1000)
 
         ##############
         # Kinematics #
         ##############
         for n, limo in enumerate(limos):
             if not limo.vehicle.collided:
-                if (i*limo.vehicle.dt).is_integer: # Checks only for new commands on whole seconds
-                    v_refs[n], alpha_refs[n] = limo.driver.experimental_driving_action(DCs[n], v_refs[n], alpha_refs[n], risk_threshold=0.7, stop_threshold=4, r_factor=0.05)
-                    #v_refs[n], alpha_refs[n] = limo.driver.determined_driver(DCs[n], SCs[n], v_refs[n], alpha_refs[n], risk_threshold=0.7, stop_threshold = 3, verbose=False)
+                if (
+                    i * limo.vehicle.dt
+                ).is_integer:  # Checks only for new commands on whole seconds
+                    v_refs[n], alpha_refs[n] = limo.driver.experimental_driving_action(
+                        DCs[n],
+                        v_refs[n],
+                        alpha_refs[n],
+                        risk_threshold=0.7,
+                        stop_threshold=4,
+                        r_factor=0.05,
+                    )
+                    # v_refs[n], alpha_refs[n] = limo.driver.determined_driver(DCs[n], SCs[n], v_refs[n], alpha_refs[n], risk_threshold=0.7, stop_threshold = 3, verbose=False)
                 # Run one cycle
             else:
                 v_refs[n], alpha_refs[n] = (0, 0)
             limo.vehicle.one_step_algorithm(alpha_ref=alpha_refs[n], v_ref=v_refs[n])
- 
+
+
 def map_tube(scale=1, height=1080, width=1920, pixels_per_unit=10):
     # Create a visualizer
-    MAP_DIMENSIONS = (height*scale, width*scale)
-    gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
-    
+    MAP_DIMENSIONS = (height * scale, width * scale)
+    gfx = Visualization(
+        MAP_DIMENSIONS,
+        pixels_per_unit=pixels_per_unit,
+        map_img_path="graphics/test_map_2.png",
+    )  # Also initializes the display
+
     # Spawn in the walls:
     vertices = np.array([[5, 5], [5, 20], [100, 20], [100, 5]])
     wall1 = Object(np.array([0, 0]), vertices=vertices)
 
     # Spawn in 1 limo-cars
-    car1 = Vehicle(np.array([12*scale, 12*scale]), length=4*scale, width=2*scale, heading=0, tau_steering=0.4, tau_throttle=0.4) #np.pi/2
+    car1 = Vehicle(
+        np.array([12 * scale, 12 * scale]),
+        length=4 * scale,
+        width=2 * scale,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+    )  # np.pi/2
 
-    objects = [car1, wall1] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    objects = [
+        car1,
+        wall1,
+    ]  # , wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
     cars = [car1]
     return gfx, objects, cars
 
+
 def driving_with_single_determined_driver():
     # Create a visualizer
-    #gfx, objects, cars = map_tube(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    gfx, objects, cars = map_lanes_single(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True)
+    # gfx, objects, cars = map_tube(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    gfx, objects, cars = map_lanes_single(
+        scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True
+    )
     car1 = cars[0]
 
     # Spawn a driver
     alpha_max = 1.2
-    v_max = 15 # 8
-    v_min = -2 # -4
+    v_max = 15  # 8
+    v_min = -2  # -4
     agent = Agent(v_max, v_min, alpha_max)
     # Make it a limo!
     limo = Limo(vehicle=car1, driver=agent)
@@ -707,62 +1043,75 @@ def driving_with_single_determined_driver():
     steps = 10000000
     # TODO: move these params to the agent!
     alpha_ref = 0
-    v_ref = 4 # 4
+    v_ref = 4  # 4
     collision = False
     for i in range(steps):
         if not collision:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: # Press x button
+                if event.type == pygame.QUIT:  # Press x button
                     exit()
 
-            
             ##############
             # Visualize! #
-            ##############   
+            ##############
             gfx.clear_canvas()
-            gfx.draw_all_objects(objects) 
-            
+            gfx.draw_all_objects(objects)
+
             # Generate circogram
             N = 36
             horizon = 100
             #
             static_circogram = car1.static_circogram_2(N, objects[1:], horizon)
-            dynamic_circogram = car1.dynamic_cicogram_2(static_circogram, alpha_ref, v_ref, seconds=3)
+            dynamic_circogram = car1.dynamic_cicogram_2(
+                static_circogram, alpha_ref, v_ref, seconds=3
+            )
             d1, d2, _, _, _ = static_circogram
             collision = car1.collision_check(d1, d2)
             if collision:
                 print("Collision!")
                 continue
-            #gfx.draw_static_circogram_data(static_circogram, car1)
-            gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=2.2, verbose=False)
-
+            # gfx.draw_static_circogram_data(static_circogram, car1)
+            gfx.draw_dynamic_circogram_data(
+                dynamic_circogram, static_circogram, risk_threshold=2.2, verbose=False
+            )
 
             gfx.draw_headings(cars, scale=True)
             gfx.draw_centers(cars)
             gfx.update_display()
-            #time.sleep(1000)
+            # time.sleep(1000)
 
             ##############
             # Kinematics #
             ##############
-            v_ref, alpha_ref = limo.driver.determined_driver(dynamic_circogram, static_circogram, v_ref, alpha_ref, risk_threshold=2.2, stop_threshold = 5, verbose=True)
-                
+            v_ref, alpha_ref = limo.driver.determined_driver(
+                dynamic_circogram,
+                static_circogram,
+                v_ref,
+                alpha_ref,
+                risk_threshold=2.2,
+                stop_threshold=5,
+                verbose=True,
+            )
+
             # Run one cycle
             limo.vehicle.one_step_algorithm(alpha_ref=alpha_ref, v_ref=v_ref)
         else:
             v_ref = 0
             alpha_ref = 0
 
+
 def driving_with_single_determined_driver_2():
     # Create a visualizer
-    #gfx, objects, cars = map_tube(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    gfx, objects, cars = map_lanes_single(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True)
+    # gfx, objects, cars = map_tube(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    gfx, objects, cars = map_lanes_single(
+        scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True
+    )
     car1 = cars[0]
 
     # Spawn a driver
     alpha_max = 1.2
-    v_max = 8 # 8
-    v_min = -2 # -4
+    v_max = 8  # 8
+    v_min = -2  # -4
     agent = Agent(v_max, v_min, alpha_max)
     # Make it a limo!
     limo = Limo(vehicle=car1, driver=agent)
@@ -771,48 +1120,59 @@ def driving_with_single_determined_driver_2():
     steps = 10000
     # TODO: move these params to the agent!
     alpha_ref = 0
-    v_ref = 4 # 4
+    v_ref = 4  # 4
     collision = False
 
     # NOTE new ide!
     for i in range(steps):
         if not collision:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: # Press x button
+                if event.type == pygame.QUIT:  # Press x button
                     exit()
 
-            
             ##############
             # Visualize! #
-            ##############   
+            ##############
             gfx.clear_canvas()
-            gfx.draw_all_objects(objects) 
-            
+            gfx.draw_all_objects(objects)
+
             # Generate circogram
             N = 36
             horizon = 100
             #
             static_circogram = car1.static_circogram_2(N, objects[1:], horizon)
-            dynamic_circogram = car1.dynamic_cicogram_2(static_circogram, alpha_ref, v_ref, seconds=3)
+            dynamic_circogram = car1.dynamic_cicogram_2(
+                static_circogram, alpha_ref, v_ref, seconds=3
+            )
             #
             d1, d2, _, _, _ = static_circogram
             collision = car1.collision_check(d1, d2)
             if collision:
                 print("Collision!")
                 continue
-            #gfx.draw_static_circogram_data(static_circogram, car1)
-            #gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=1, verbose=False)
+            # gfx.draw_static_circogram_data(static_circogram, car1)
+            # gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=1, verbose=False)
 
             gfx.draw_headings(cars, scale=True)
             gfx.draw_centers(cars)
-            
-            #time.sleep(1000)
+
+            # time.sleep(1000)
 
             ##############
             # Kinematics #
             ##############
-            v_ref, alpha_ref, diff_risk = limo.driver.determined_driver_new_DC(dynamic_circogram, static_circogram, v_ref, alpha_ref, risk_threshold=2, stop_threshold = 10, verbose=True)
-            gfx.draw_DC_3_data(diff_risk, static_circogram, risk_threshold=2, verbose=False)    
+            v_ref, alpha_ref, diff_risk = limo.driver.determined_driver_new_DC(
+                dynamic_circogram,
+                static_circogram,
+                v_ref,
+                alpha_ref,
+                risk_threshold=2,
+                stop_threshold=10,
+                verbose=True,
+            )
+            gfx.draw_DC_3_data(
+                diff_risk, static_circogram, risk_threshold=2, verbose=False
+            )
             # Run one cycle
             limo.vehicle.one_step_algorithm(alpha_ref=alpha_ref, v_ref=v_ref)
         else:
@@ -821,7 +1181,10 @@ def driving_with_single_determined_driver_2():
 
         gfx.update_display()
 
-def map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True, dt=0.1):
+
+def map_tube_multi(
+    scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True, dt=0.1
+):
     # Spawn in the walls:
     vertices = np.array([[5, 5], [5, 80], [150, 80], [150, 5]])
     outer_rim = Object(np.array([0, 0]), vertices=vertices)
@@ -837,24 +1200,88 @@ def map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=Tru
     rim4 = Object(np.array([0, 0]), vertices=vertices)
 
     # Volkswagen
-    car1 = Vehicle(np.array([25, 15]),  length=4, width=2, heading=0,     tau_steering=0.4, tau_throttle=0.4, dt=dt) 
-    car2 = Vehicle(np.array([125, 15]), length=4, width=2, heading=np.pi, tau_steering=0.4, tau_throttle=0.4, dt=dt) 
-    car3 = Vehicle(np.array([25, 55]),  length=4, width=2, heading=0,     tau_steering=0.4, tau_throttle=0.4, dt=dt) 
-    car4 = Vehicle(np.array([125, 55]), length=4, width=2, heading=np.pi, tau_steering=0.4, tau_throttle=0.4, dt=dt)
+    car1 = Vehicle(
+        np.array([25, 15]),
+        length=4,
+        width=2,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car2 = Vehicle(
+        np.array([125, 15]),
+        length=4,
+        width=2,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car3 = Vehicle(
+        np.array([25, 55]),
+        length=4,
+        width=2,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car4 = Vehicle(
+        np.array([125, 55]),
+        length=4,
+        width=2,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
     # Extra
-    car5 = Vehicle(np.array([65, 35]),  length=4, width=2, heading=np.pi,     tau_steering=0.4, tau_throttle=0.4, dt=dt) 
-    car6 = Vehicle(np.array([85, 35]), length=4, width=2, heading=0,         tau_steering=0.4, tau_throttle=0.4, dt=dt)
+    car5 = Vehicle(
+        np.array([65, 35]),
+        length=4,
+        width=2,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car6 = Vehicle(
+        np.array([85, 35]),
+        length=4,
+        width=2,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
 
-    objects = [car1, car2, car3, car4, car5, car6, outer_rim, rim1, rim2, rim3, rim4] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        car5,
+        car6,
+        outer_rim,
+        rim1,
+        rim2,
+        rim3,
+        rim4,
+    ]  # , wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
     cars = [car1, car2, car3, car4, car5, car6]
-    
+
     if viz:
-        MAP_DIMENSIONS = (height*scale, width*scale)
-        gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
         return gfx, objects, cars
     else:
         return objects, cars
-    
+
 
 def map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True):
     # Spawn in the outer wall:
@@ -866,7 +1293,7 @@ def map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=Tr
 
     vertices = np.array([[25, 65], [25, 75], [160, 75], [160, 65]])
     wall2 = Object(np.array([0, 0]), vertices=vertices)
-    
+
     # Some smaller obstacles
     vertices = PointsOnCircum(r=12, n=4, center=(5, 5))
     rim1 = Object(np.array([0, 0]), vertices=vertices)
@@ -881,24 +1308,70 @@ def map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=Tr
     vertices = PointsOnCircum(r=5, n=4, center=(5, 50))
     rim6 = Object(np.array([0, 0]), vertices=vertices)
 
-
     # Spawn in 1 limo-cars
     # Volkswagen
-    car1 = Vehicle(np.array([35, 20]),  length=4, width=2, heading=0,     tau_steering=0.4, tau_throttle=0.4) 
-    car2 = Vehicle(np.array([145, 20]), length=4, width=2, heading=np.pi, tau_steering=0.4, tau_throttle=0.4) 
-    car3 = Vehicle(np.array([15, 50]),  length=4, width=2, heading=0,     tau_steering=0.4, tau_throttle=0.4) 
-    car4 = Vehicle(np.array([100, 50]), length=4, width=2, heading=np.pi, tau_steering=0.4, tau_throttle=0.4) 
+    car1 = Vehicle(
+        np.array([35, 20]),
+        length=4,
+        width=2,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+    )
+    car2 = Vehicle(
+        np.array([145, 20]),
+        length=4,
+        width=2,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+    )
+    car3 = Vehicle(
+        np.array([15, 50]),
+        length=4,
+        width=2,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+    )
+    car4 = Vehicle(
+        np.array([100, 50]),
+        length=4,
+        width=2,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+    )
 
-    obj = [car1, car2, car3, car4, outer_rim, wall1, wall2,  rim5, rim1, rim3, rim6]#, rim2, rim3, rim4, rim5] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    obj = [
+        car1,
+        car2,
+        car3,
+        car4,
+        outer_rim,
+        wall1,
+        wall2,
+        rim5,
+        rim1,
+        rim3,
+        rim6,
+    ]  # , rim2, rim3, rim4, rim5] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
     cars = [car1, car2, car3, car4]
     if viz:
-        MAP_DIMENSIONS = (height*scale, width*scale)
-        gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
         return gfx, obj, cars
     else:
         return obj, cars
-    
-def map_city_block_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True):
+
+
+def map_city_block_multi(
+    scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True
+):
     # Spawn in the outer wall:
     vertices = np.array([[5, 5], [5, 105], [145, 105], [145, 5]])
     outer_rim = Object(np.array([0, 0]), vertices=vertices)
@@ -914,7 +1387,7 @@ def map_city_block_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, v
 
     vertices = np.array([[90, 65], [90, 85], [125, 85], [125, 65]])
     block4 = Object(np.array([0, 0]), vertices=vertices)
-    
+
     # Some smaller obstacles
     vertices = PointsOnCircum(r=12, n=4, center=(5, 5))
     rim1 = Object(np.array([0, 0]), vertices=vertices)
@@ -926,25 +1399,83 @@ def map_city_block_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, v
     rim4 = Object(np.array([0, 0]), vertices=vertices)
     vertices = PointsOnCircum(r=5, n=4, center=(145, 54))
 
-
-
     # Spawn in 1 limo-cars
     # Volkswagen
-    car1 = Vehicle(np.array([25, 15]),  length=4, width=2, heading=0,     tau_steering=0.4, tau_throttle=0.4, dt=0.1) 
-    car2 = Vehicle(np.array([125, 15]), length=4, width=2, heading=np.pi, tau_steering=0.4, tau_throttle=0.4, dt=0.1) 
-    car3 = Vehicle(np.array([25, 55]),  length=4, width=2, heading=0,     tau_steering=0.4, tau_throttle=0.4, dt=0.1) 
-    car4 = Vehicle(np.array([125, 55]), length=4, width=2, heading=np.pi, tau_steering=0.4, tau_throttle=0.4, dt=0.1) 
+    car1 = Vehicle(
+        np.array([25, 15]),
+        length=4,
+        width=2,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=0.1,
+    )
+    car2 = Vehicle(
+        np.array([125, 15]),
+        length=4,
+        width=2,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=0.1,
+    )
+    car3 = Vehicle(
+        np.array([25, 55]),
+        length=4,
+        width=2,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=0.1,
+    )
+    car4 = Vehicle(
+        np.array([125, 55]),
+        length=4,
+        width=2,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=0.1,
+    )
 
-    obj = [car1, car2, car3, car4, outer_rim, block1, block2, block3, block4, rim1, rim2, rim3, rim4]#, rim2, rim3, rim4, rim5] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    obj = [
+        car1,
+        car2,
+        car3,
+        car4,
+        outer_rim,
+        block1,
+        block2,
+        block3,
+        block4,
+        rim1,
+        rim2,
+        rim3,
+        rim4,
+    ]  # , rim2, rim3, rim4, rim5] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
     cars = [car1, car2, car3, car4]
     if viz:
-        MAP_DIMENSIONS = (height*scale, width*scale)
-        gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
         return gfx, obj, cars
     else:
         return obj, cars
 
-def map_lanes_single(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True, dt=0.1, tau_steering=0.4, tau_throttle=0.4):
+
+def map_lanes_single(
+    scale=1,
+    height=1080,
+    width=1920,
+    pixels_per_unit=10,
+    viz=True,
+    dt=0.1,
+    tau_steering=0.9,
+    tau_throttle=0.9,
+):
     # Spawn in the outer wall:
     vertices = np.array([[5, 5], [5, 105], [180, 105], [180, 5]])
     outer_rim = Object(np.array([0, 0]), vertices=vertices)
@@ -954,7 +1485,7 @@ def map_lanes_single(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=T
 
     vertices = np.array([[25, 65], [25, 75], [160, 75], [160, 65]])
     wall2 = Object(np.array([0, 0]), vertices=vertices)
-    
+
     # Some smaller obstacles
     vertices = PointsOnCircum(r=12, n=4, center=(5, 5))
     rim1 = Object(np.array([0, 0]), vertices=vertices)
@@ -969,27 +1500,50 @@ def map_lanes_single(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=T
     vertices = PointsOnCircum(r=5, n=4, center=(5, 50))
     rim6 = Object(np.array([0, 0]), vertices=vertices)
 
-
     # Spawn in 1 limo-cars
-    car1 = Vehicle(np.array([35, 20]),  length=5, width=3, heading=0,     tau_steering=tau_steering, tau_throttle=tau_throttle, dt=dt) 
+    car1 = Vehicle(
+        np.array([35, 20]),
+        length=5,
+        width=3,
+        heading=0,
+        tau_steering=tau_steering,
+        tau_throttle=tau_throttle,
+        dt=dt,
+    )
 
-    obj = [car1, outer_rim, wall1, wall2,  rim5, rim1, rim3, rim6]#, rim2, rim3, rim4, rim5] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    obj = [
+        car1,
+        outer_rim,
+        wall1,
+        wall2,
+        rim5,
+        rim1,
+        rim3,
+        rim6,
+    ]  # , rim2, rim3, rim4, rim5] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
     cars = [car1]
     if viz:
-        MAP_DIMENSIONS = (height*scale, width*scale)
-        gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
         return gfx, obj, cars
     else:
         return obj, cars
 
+
 def driving_with_many_determined_drivers_fishtank():
     # Create a visualizer
-    gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    
+    gfx, objects, cars = map_tube_multi(
+        scale=1, height=1080, width=1920, pixels_per_unit=10
+    )
+
     # Spawn drivers
     alpha_max = 1.2
-    v_max = 7 # 6 
-    v_min = -2 
+    v_max = 7  # 6
+    v_min = -2
     limos = []
     for car in cars:
         agent = Agent(v_max, v_min, alpha_max)
@@ -1001,18 +1555,18 @@ def driving_with_many_determined_drivers_fishtank():
     steps = 10000
     # TODO: move these params to the agent?
     alpha_refs = np.zeros(len(cars))
-    v_refs = np.ones(len(cars))*2
+    v_refs = np.ones(len(cars)) * 2
     for i in range(steps):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: # Press x button
+            if event.type == pygame.QUIT:  # Press x button
                 exit()
 
         ##############
         # Visualize! #
-        ##############   
+        ##############
         gfx.clear_canvas()
-        gfx.draw_all_objects(objects) 
-        
+        gfx.draw_all_objects(objects)
+
         # Generate circogram
         N = 36
         horizon = 500
@@ -1020,15 +1574,20 @@ def driving_with_many_determined_drivers_fishtank():
         DCs = []
         SCs = []
         for n, car in enumerate(cars):
-            static_circogram = car.static_circogram_2(N, objects[0:n]+objects[n+1:], horizon)
-            dynamic_circogram = car.dynamic_cicogram_2(static_circogram, alpha_refs[n], v_refs[n], seconds=3)
+            static_circogram = car.static_circogram_2(
+                N, objects[0:n] + objects[n + 1 :], horizon
+            )
+            dynamic_circogram = car.dynamic_cicogram_2(
+                static_circogram, alpha_refs[n], v_refs[n], seconds=3
+            )
             d1, d2, _, _, _ = static_circogram
             car.collision_check(d1, d2)
-            #gfx.draw_static_circogram_data(static_circogram, car)
-            gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=1, verbose=False)
+            # gfx.draw_static_circogram_data(static_circogram, car)
+            gfx.draw_dynamic_circogram_data(
+                dynamic_circogram, static_circogram, risk_threshold=1, verbose=False
+            )
             DCs.append(dynamic_circogram)
             SCs.append(static_circogram)
-
 
         gfx.draw_headings(cars, scale=True)
         gfx.draw_centers(cars)
@@ -1039,25 +1598,37 @@ def driving_with_many_determined_drivers_fishtank():
         ##############
         for n, limo in enumerate(limos):
             if not limo.vehicle.collided:
-                v_refs[n], alpha_refs[n] = limo.driver.determined_driver(DCs[n], SCs[n], v_refs[n], alpha_refs[n], risk_threshold=1, stop_threshold = 3.5,  dist_wait=1, verbose=False)
-                #v_refs[n], alpha_refs[n] = limo.driver.determined_driver(DCs[n], SCs[n], v_refs[n], alpha_refs[n], risk_threshold= 1.5, stop_threshold = 4,  dist_wait=10, verbose=False)
+                v_refs[n], alpha_refs[n] = limo.driver.determined_driver(
+                    DCs[n],
+                    SCs[n],
+                    v_refs[n],
+                    alpha_refs[n],
+                    risk_threshold=1,
+                    stop_threshold=3.5,
+                    dist_wait=1,
+                    verbose=False,
+                )
+                # v_refs[n], alpha_refs[n] = limo.driver.determined_driver(DCs[n], SCs[n], v_refs[n], alpha_refs[n], risk_threshold= 1.5, stop_threshold = 4,  dist_wait=10, verbose=False)
             else:
                 v_refs[n], alpha_refs[n] = (0, 0)
             # Run one step
             limo.vehicle.one_step_algorithm(alpha_ref=alpha_refs[n], v_ref=v_refs[n])
 
+
 def driving_with_many_determined_drivers():
     # Create a visualizer
 
-    #gfx, objects, cars = map_circle_multi(scale=1, height=1200, width=2000, pixels_per_unit=10)
-    #gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    #gfx, objects, cars = map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    gfx, objects, cars = map_city_block_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    
+    # gfx, objects, cars = map_circle_multi(scale=1, height=1200, width=2000, pixels_per_unit=10)
+    # gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    # gfx, objects, cars = map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    gfx, objects, cars = map_city_block_multi(
+        scale=1, height=1080, width=1920, pixels_per_unit=10
+    )
+
     # Spawn drivers
-    alpha_max = 1.2 # Volkswagen
-    v_max = 7 # 6 
-    v_min = -2 
+    alpha_max = 1.2  # Volkswagen
+    v_max = 7  # 6
+    v_min = -2
     limos = []
     for car in cars:
         agent = Agent(v_max, v_min, alpha_max)
@@ -1069,18 +1640,18 @@ def driving_with_many_determined_drivers():
     steps = 1000
     # TODO: move these params to the agent?
     alpha_refs = np.zeros(len(cars))
-    v_refs = np.ones(len(cars))*2
+    v_refs = np.ones(len(cars)) * 2
     for i in range(steps):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: # Press x button
+            if event.type == pygame.QUIT:  # Press x button
                 exit()
 
         ##############
         # Visualize! #
-        ##############   
+        ##############
         gfx.clear_canvas()
-        gfx.draw_all_objects(objects) 
-        
+        gfx.draw_all_objects(objects)
+
         # Generate circogram
         N = 36
         horizon = 500
@@ -1088,15 +1659,18 @@ def driving_with_many_determined_drivers():
         DCs = []
         SCs = []
         for n, car in enumerate(cars):
-            static_circogram = car.static_circogram_2(N, objects[0:n]+objects[n+1:], horizon)
-            dynamic_circogram = car.dynamic_cicogram_2(static_circogram, alpha_refs[n], v_refs[n], seconds=3)
+            static_circogram = car.static_circogram_2(
+                N, objects[0:n] + objects[n + 1 :], horizon
+            )
+            dynamic_circogram = car.dynamic_cicogram_2(
+                static_circogram, alpha_refs[n], v_refs[n], seconds=3
+            )
             d1, d2, _, _, _ = static_circogram
             car.collision_check(d1, d2)
-            #gfx.draw_static_circogram_data(static_circogram, car)
-            #gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=1.5, verbose=False)
+            # gfx.draw_static_circogram_data(static_circogram, car)
+            # gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=1.5, verbose=False)
             DCs.append(dynamic_circogram)
             SCs.append(static_circogram)
-
 
         gfx.draw_headings(cars, scale=True)
         gfx.draw_centers(cars)
@@ -1107,53 +1681,814 @@ def driving_with_many_determined_drivers():
         ##############
         for n, limo in enumerate(limos):
             if not limo.vehicle.collided:
-                v_refs[n], alpha_refs[n] = limo.driver.determined_driver(DCs[n], SCs[n], v_refs[n], alpha_refs[n], risk_threshold= 1.5, stop_threshold = 4,  dist_wait=10, verbose=False)
+                v_refs[n], alpha_refs[n] = limo.driver.determined_driver(
+                    DCs[n],
+                    SCs[n],
+                    v_refs[n],
+                    alpha_refs[n],
+                    risk_threshold=1.5,
+                    stop_threshold=4,
+                    dist_wait=10,
+                    verbose=False,
+                )
             else:
                 v_refs[n], alpha_refs[n] = (0, 0)
             # Run one step
             limo.vehicle.one_step_algorithm(alpha_ref=alpha_refs[n], v_ref=v_refs[n])
 
-def map_circle_multi(scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True, dt=0.1):
+
+def map_circle_multi(
+    scale=1, height=1080, width=1920, pixels_per_unit=10, viz=True, dt=0.1
+):
     # Spawn in the walls:
-    #vertices = PointsOnCircum(r=100, n=50, center=(75, 55))
+    # vertices = PointsOnCircum(r=100, n=50, center=(75, 55))
 
     vertices = np.array([[0, 0], [0, 100], [100, 100], [100, 0]])
     outer_rim = Object(np.array([0, 0]), vertices=vertices)
 
     # Volkswagen
-    car1 = Vehicle(np.array([35, 20]),  length=8, width=4, heading=0,     tau_steering=0.4, tau_throttle=0.4, dt=dt) 
-    car2 = Vehicle(np.array([65,20]), length=8, width=4, heading=np.pi, tau_steering=0.4, tau_throttle=0.4, dt=dt) 
-    car3 = Vehicle(np.array([25, 55]),  length=8, width=4, heading=0,     tau_steering=0.4, tau_throttle=0.4, dt=dt) 
-    car4 = Vehicle(np.array([85,55]), length=8, width=4, heading=np.pi, tau_steering=0.4, tau_throttle=0.4, dt=dt)
+    car1 = Vehicle(
+        np.array([35, 20]),
+        length=8,
+        width=4,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car2 = Vehicle(
+        np.array([65, 20]),
+        length=8,
+        width=4,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car3 = Vehicle(
+        np.array([25, 55]),
+        length=8,
+        width=4,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car4 = Vehicle(
+        np.array([85, 55]),
+        length=8,
+        width=4,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
     # Extra
-    car5 = Vehicle(np.array([65, 35]),  length=8, width=4, heading=np.pi,     tau_steering=0.4, tau_throttle=0.4, dt=dt) 
-    car6 = Vehicle(np.array([85, 35]),  length=8, width=4, heading=0,         tau_steering=0.4, tau_throttle=0.4, dt=dt)
+    car5 = Vehicle(
+        np.array([65, 35]),
+        length=8,
+        width=4,
+        heading=np.pi,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car6 = Vehicle(
+        np.array([85, 35]),
+        length=8,
+        width=4,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
 
-    objects = [car1, car2, car3, car4, car5, car6, outer_rim] #, wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        car5,
+        car6,
+        outer_rim,
+    ]  # , wall2, wall3, wall4, wall5, wall6, wall7, wall8, wall9]#, wall10]
     cars = [car1, car2, car3, car4, car5, car6]
-    
+
     if viz:
-        MAP_DIMENSIONS = (height*scale, width*scale)
-        gfx = Visualization(MAP_DIMENSIONS, pixels_per_unit=pixels_per_unit, map_img_path="graphics/test_map_2.png") # Also initializes the display
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
         return gfx, objects, cars
     else:
         return objects, cars
 
+
+def make_boat_scenario(
+    scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=10, viz=True, dt=1.0
+):
+    # Spawn in the walls:
+    # vertices = PointsOnCircum(r=100, n=50, center=(75, 55))
+
+    # Define the outer rim (harbor boundary)
+    outer_rim = Object(
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[0, 0], [0, 110], [190, 110], [190, 0]]  # Outer boundary of the harbor
+        ),
+    )
+
+    pier1 = Object(
+        name="Pier1",
+        center=np.array([0, 0]),
+        vertices=np.array([[65, 45], [65, 85], [68, 85], [68, 45]]),
+    )
+    pier2 = Object(
+        name="Pier2",
+        center=np.array([0, 0]),
+        vertices=np.array([[105, 15], [105, 50], [111, 50], [111, 15]]),
+    )
+    pier3 = Object(
+        name="Pier3",
+        center=np.array([0, 0]),
+        vertices=np.array([[105, 95], [105, 105], [107, 105], [107, 95]]),
+    )
+    pier4 = Object(
+        name="Pier4",
+        center=np.array([0, 0]),
+        vertices=np.array([[107, 100], [107, 101], [110, 101], [110, 100]]),
+    )
+
+    building1 = Object(
+        name="Building1",
+        center=np.array([70, 70]),
+        vertices=np.array([[150, 80], [150, 90], [160, 90], [160, 80]]),
+    )
+
+    building2 = Object(
+        name="Building2",
+        center=np.array([130, 60]),
+        vertices=np.array(
+            [[15, 15], [15, 35], [35, 35], [35, 15]]
+        ),
+    )
+
+    building3 = Object(
+        name="Building3",
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[170, 50], [170, 60], [180, 60], [180, 50]]
+        ),
+    )
+
+    # 0 = East
+    # np.pi/2 = South
+    # np.pi = West
+    # 3*np.pi/2 = North
+
+    car1 = Vehicle(
+        np.array([5, 85]),
+        length=8.0,
+        width=1.42,
+        heading=3*np.pi/2,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car2 = Vehicle(
+        np.array([15, 75]),
+        length=8.0,
+        width=1.42,
+        heading=7*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car3 = Vehicle(
+        np.array([10, 100]),
+        length=8.0,
+        width=1.42,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car4 = Vehicle(
+        np.array([120, 15]),
+        length=8.0,
+        width=1.42,
+        heading=np.pi/2,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car5 = Vehicle(
+        np.array([125, 10]),
+        length=8.0,
+        width=1.42,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car6 = Vehicle(
+        np.array([175, 100]),
+        length=8.0,
+        width=1.42,
+        heading=3*np.pi/2,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        car5,
+        car6,
+        outer_rim,
+        pier1,
+        pier2,
+        # pier3,
+        # pier4,
+        building1,
+        building2,
+        # building3,
+    ]
+    cars = [car1, car2, car3, car4, car5, car6]
+
+    if viz:
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
+        return gfx, objects, cars
+    else:
+        return objects, cars
+
+
+def make_boat_scenario_bigger(
+    scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=6, viz=True, dt=1.0
+):
+    # Spawn in the walls:
+    # vertices = PointsOnCircum(r=100, n=50, center=(75, 55))
+
+    # Define the outer rim (harbor boundary)
+    outer_rim = Object(
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[60, 0], [30, 5], [5, 30], [0, 60], [0, 100], [5, 130], [30, 155], [60, 160], 
+            [240, 160], [270, 155], [295, 130], [300, 100], [300, 60], [295, 30], [270, 5], [240, 0]]  # Outer boundary of the harbor
+        ),
+    )
+
+    pier1 = Object(
+        name="Pier1",
+        center=np.array([0, 0]),
+        vertices=np.array([[190, 105], [190, 145], [193, 145], [193, 105]]),
+    )
+    pier2 = Object(
+        name="Pier2",
+        center=np.array([0, 0]),
+        vertices=np.array([[155, 15], [155, 50], [161, 50], [161, 15]]),
+    )
+
+    building1 = Object(
+        name="Building1",
+        center=np.array([0, 0]),
+        vertices=np.array([[85, 115], [85, 125], [95, 125], [95, 115]]),
+    )
+    building2 = Object(
+        name="Building2",
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[35, 55], [35, 75], [65, 75], [65, 55]]
+        ),
+    )
+    building3 = Object(
+        name="Building3",
+        center=np.array([0, 0]),
+        vertices=np.array(
+            [[225, 60], [225, 70], [235, 70], [235, 60]]
+        ),
+    )
+
+    # 0 = East
+    # np.pi/2 = South
+    # np.pi = West
+    # 3*np.pi/2 = North
+
+    car1 = Vehicle(
+        np.array([80, 10]),
+        length=8.0,
+        width=1.42,
+        heading=3*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car2 = Vehicle(
+        np.array([10, 75]),
+        length=8.0,
+        width=1.42,
+        heading=np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car3 = Vehicle(
+        np.array([120, 10]),
+        length=8.0,
+        width=1.42,
+        heading=np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car4 = Vehicle(
+        np.array([80, 140]),
+        length=8.0,
+        width=1.42,
+        heading=5*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car5 = Vehicle(
+        np.array([290, 80]),
+        length=8.0,
+        width=1.42,
+        heading=5*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car6 = Vehicle(
+        np.array([120, 140]),
+        length=8.0,
+        width=1.42,
+        heading=7*np.pi/4,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car7 = Vehicle(
+        np.array([90, 90]),
+        length=7.0,
+        width=2.3,
+        heading=7*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car8 = Vehicle(
+        np.array([140, 50]),
+        length=7.0,
+        width=2.3,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car9 = Vehicle(
+        np.array([190, 90]),
+        length=7.0,
+        width=2.3,
+        heading=0,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+
+    objects = [
+        car1,
+        car2,
+        car3,
+        car4,
+        car5,
+        car6,
+        car7,
+        car8,
+        car9,
+        outer_rim,
+        pier1,
+        pier2,
+        building1,
+        building2,
+        building3,
+    ]
+    cars = [car1, car2, car3, car4, car5, car6, car7, car8, car9]
+
+    if viz:
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
+        return gfx, objects, cars
+    else:
+        return objects, cars
+
+
+def make_Ravnkloa(scale=1, height=1080, width=1920, scale_boat_phys=1, pixels_per_unit=6, viz=True, dt=1.0):
+    coordinates = np.array([
+            [127.893567, 150.842699],
+            [116.813103, 130.938903],
+            [86.6496169, 150.021924],
+            [1.69939146, 149.406343],
+            [1.69939146, 138.120685], 
+            [88.2911671, 70.2015434],
+            [86.6496169, 50.0925529],
+            [95.8833370, 37.1653446],
+            [112.093646, 23.4173613],
+            [107.784576, 14.3888349],
+            [119.275428, 6.79666503],
+            [134.254574, 15.2096101],
+            [162.981703, 7.20705259],
+            [171.599842, 0.230464029],
+            [277.479833, 1.05123915],
+            [278.505802, 31.0095312],
+            [262.911075, 34.9082131],
+            [201.763328, 65.4820865],
+            [205.867204, 76.5625506],
+            [191.708833, 83.9495268],
+            [182.680306, 73.4846439],
+            [173.036199, 77.9989071],
+            [174.472555, 87.4378210],
+            [167.495967, 93.1832469],
+            [168.932323, 98.9286728],
+            [143.693488, 114.728594],
+            [150.259689, 144.071305],
+            [127.893567, 150.842699]
+    ])
+
+    car = Vehicle(
+        np.array([90, 90]),
+        length=5.0,
+        width=3.0,
+        heading=0,
+        tau_steering=0.4,
+        tau_throttle=0.4,
+        dt=dt,
+    )
+    car1 = Vehicle(
+        np.array([121, 68]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/2,
+        tau_steering=0.2, 
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car2 = Vehicle(
+        np.array([82, 104]), 
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car3 = Vehicle(
+        np.array([107, 75]),
+        length=5.0, 
+        width=2.5,
+        heading=3*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car4 = Vehicle(
+        np.array([86, 126]),
+        length=5.0,
+        width=2.5, 
+        heading=7*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car5 = Vehicle(
+        np.array([111, 54]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car6 = Vehicle(
+        np.array([161, 40]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2, 
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car7 = Vehicle(
+        np.array([136, 98]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car8 = Vehicle(
+        np.array([189, 65]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car9 = Vehicle(
+        np.array([142, 32]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car10 = Vehicle(
+        np.array([25, 128]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car11 = Vehicle(
+        np.array([175, 65]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car12 = Vehicle(
+        np.array([68, 112]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car13 = Vehicle(
+        np.array([155, 45]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car14 = Vehicle(
+        np.array([100, 45]),
+        length=5.0,
+        width=2.5,
+        heading=5*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car15 = Vehicle(
+        np.array([170, 60]),
+        length=5.0,
+        width=2.5,
+        heading=7*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car16 = Vehicle(
+        np.array([145, 75]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car17 = Vehicle(
+        np.array([140, 20]),
+        length=5.0,
+        width=2.5,
+        heading=0,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car18 = Vehicle(
+        np.array([220, 30]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car19 = Vehicle(
+        np.array([200, 40]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car20 = Vehicle(
+        np.array([180, 40]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car21 = Vehicle(
+        np.array([140, 54]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car22 = Vehicle(
+        np.array([110, 84]),
+        length=5.0,
+        width=2.5,
+        heading=5*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car23 = Vehicle(
+        np.array([195, 45]),
+        length=5.0,
+        width=2.5,
+        heading=7*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car24 = Vehicle(
+        np.array([105, 110]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car25 = Vehicle(
+        np.array([150, 25]),
+        length=5.0,
+        width=2.5,
+        heading=0,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car26 = Vehicle(
+        np.array([105, 35]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car27 = Vehicle(
+        np.array([100, 80]),
+        length=5.0,
+        width=2.5,
+        heading=np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car28 = Vehicle(
+        np.array([125, 95]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/2,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car29 = Vehicle(
+        np.array([150, 55]),
+        length=5.0,
+        width=2.5,
+        heading=3*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+    car30 = Vehicle(
+        np.array([95, 70]),
+        length=5.0,
+        width=2.5,
+        heading=5*np.pi/4,
+        tau_steering=0.2,
+        tau_throttle=0.2,
+        dt=dt,
+    )
+
+
+    # Define the outer rim (harbor boundary)
+    outer_rim = Object(
+        center=np.array([0, 0]),
+        vertices=coordinates,
+    )
+
+    objects = [
+        car,
+        car1,
+        car2,
+        car3,
+        car4,
+        car5,
+        car6,
+        car7,
+        car8,
+        car9,
+        car10,
+        car11,
+        car12,
+        car13,
+        car14,
+        car15,
+        car16,
+        car17,
+        car18,
+        car19,
+        car20,
+        car21,
+        car22,
+        car23,
+        car24,
+        car25,
+        car26,
+        car27,
+        car28,
+        car29,
+        car30,
+        outer_rim
+    ]
+    cars = [car, car1, car2, car3, car4, car5, car6, car7, car8, car9, car10, 
+            car11, car12, car13, car14, car15, car16, car17, car18, car19, car20,
+            car21, car22, car23, car24, car25, car26, car27, car28, car29, car30
+            ]
+
+    if viz:
+        MAP_DIMENSIONS = (height * scale, width * scale)
+        gfx = Visualization(
+            MAP_DIMENSIONS,
+            pixels_per_unit=pixels_per_unit,
+            map_img_path="graphics/test_map_2.png",
+        )  # Also initializes the display
+        return gfx, objects, cars
+    else:
+        return objects, cars
+
+
 def driving_with_many_boats():
     # Create a visualizer
     divider = 10
-    dt = 1/divider
-    gfx, objects, cars = map_circle_multi(scale=1, height=1200, width=2200, pixels_per_unit=10, dt=dt)
-    #gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    #gfx, objects, cars = map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    #gfx, objects, cars = map_city_block_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
-    
+    dt = 1 / divider
+    gfx, objects, cars = make_Ravnkloa(
+        scale=1, scale_boat_phys=5, height=1080, width=1920, dt=dt
+    )
+    # gfx, objects, cars = map_tube_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    # gfx, objects, cars = map_lanes_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
+    # gfx, objects, cars = map_city_block_multi(scale=1, height=1080, width=1920, pixels_per_unit=10)
+
     # Spawn drivers
-    alpha_max = 0.8 # boat
-    v_max = 7 # 6 
-    v_min = -2 
+    alpha_max = 0.8  # boat
+    v_max = 3.0  # 6
+    v_min = -1.5
     limos = []
-    for car in cars:
+
+    # Spawn milliAmpere
+    agent = Agent(0.5, -0.2, alpha_max)
+    limo = Limo(vehicle=cars[0], driver=agent)
+    limos.append(limo)
+    for car in cars[1:]:
         agent = Agent(v_max, v_min, alpha_max)
         # Make it a limo!
         limo = Limo(vehicle=car, driver=agent)
@@ -1163,38 +2498,51 @@ def driving_with_many_boats():
     steps = 8000
     # TODO: move these params to the agent?
     alpha_refs = np.zeros(len(cars))
-    v_refs = np.ones(len(cars))*2
+    v_refs = np.ones(len(cars)) * 2
     for i in range(steps):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: # Press x button
+            if event.type == pygame.QUIT:  # Press x button
                 exit()
 
         ##############
         # Visualize! #
-        ##############   
+        ##############
         gfx.clear_canvas()
-        gfx.draw_all_objects(objects) 
-        
+        gfx.draw_all_objects(objects)
+
         # Generate circogram
         N = 36
         horizon = 500
         # Circograms!
         DCs = []
         SCs = []
-        if i %(divider//6) ==0: # Only every 0.1 seconds
+        if i % (divider // 6) == 0:  # Only every 0.1 seconds
             for n, car in enumerate(cars):
-                static_circogram = car.static_circogram_2(N, objects[0:n]+objects[n+1:], horizon)
-                dynamic_circogram = car.dynamic_cicogram_2(static_circogram, alpha_refs[n], v_refs[n], seconds=3)
+                static_circogram = car.static_circogram_2(
+                    N, objects[0:n] + objects[n + 1 :], horizon
+                )
+                dynamic_circogram = car.dynamic_cicogram_2(
+                    static_circogram, alpha_refs[n], v_refs[n], seconds=3
+                )
                 d1, d2, _, _, _ = static_circogram
                 car.collision_check(d1, d2)
-                #gfx.draw_static_circogram_data(static_circogram, car)
-                #gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=1.5, verbose=False)
+                # gfx.draw_static_circogram_data(static_circogram, car)
+                # gfx.draw_dynamic_circogram_data(dynamic_circogram, static_circogram, risk_threshold=1.5, verbose=False)
                 DCs.append(dynamic_circogram)
                 SCs.append(static_circogram)
-        
+
             for n, limo in enumerate(limos):
                 if not limo.vehicle.collided:
-                    v_refs[n], alpha_refs[n] = limo.driver.determined_driver(DCs[n], SCs[n], v_refs[n], alpha_refs[n], risk_threshold=0.4, stop_threshold = 2,  dist_wait=10, verbose=False)
+                    v_refs[n], alpha_refs[n] = limo.driver.determined_driver(
+                        DCs[n],
+                        SCs[n],
+                        v_refs[n],
+                        alpha_refs[n],
+                        risk_threshold=0.4,
+                        stop_threshold=2,
+                        dist_wait=10,
+                        verbose=False,
+                    )
                 else:
                     v_refs[n], alpha_refs[n] = (0, 0)
 
@@ -1210,28 +2558,18 @@ def driving_with_many_boats():
         gfx.update_display()
 
 
-
 if __name__ == "__main__":
     """
     Visualizing circograms:
     """
 
-    #dynamic_circogram_test()
-    #still_circogram_test()
-    #driving_with_single_random_driver()
-    #driving_with_multiple_random_drivers()
-    #driving_with_multiple_random_drivers_maze()
+    # dynamic_circogram_test()
+    # still_circogram_test()
+    # driving_with_single_random_driver()
+    # driving_with_multiple_random_drivers()
+    # driving_with_multiple_random_drivers_maze()
 
-    #driving_with_single_determined_driver()
-    driving_with_many_determined_drivers()
+    # driving_with_single_determined_driver()
+    # driving_with_many_determined_drivers()
 
-    #driving_with_many_boats()
-
-
-    
-
-
-
-
-
-    
+    driving_with_many_boats()
